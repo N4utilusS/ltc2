@@ -591,11 +591,12 @@ public class ParsSemanticAnal {
 			syntax_error("missing:" +  lexicalUnit);
 		}
 		else{
-			currentToken = cobolScanner.next_token();
+			
 			System.out.println(lexicalUnit);
 			if(lexicalUnit == IDENTIFIER){
-				System.out.println(cobolScanner.getTableOfSymbols().get(lexicalUnit).CONTENT);
+				System.out.println(cobolScanner.getTableOfSymbols().get(currentToken.getValue()).getValue());
 			}
+			currentToken = cobolScanner.next_token();
 		}	
 	}
 }
