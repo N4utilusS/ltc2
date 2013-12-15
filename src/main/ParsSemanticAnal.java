@@ -1,12 +1,13 @@
 package main;
 import java.io.IOException;
+import java.util.Map;
 
 import static main.LexicalUnit.*;
 
 public class ParsSemanticAnal {
 
 	private Scanner cobolScanner;
-	private Symbol currentToken;
+	private Symbol<String> currentToken;
 
 	public ParsSemanticAnal(){
 		this.cobolScanner = new Scanner(System.in);
@@ -17,7 +18,7 @@ public class ParsSemanticAnal {
 			e.printStackTrace();
 			System.out.println(e.getMessage());
 		} catch (Exception e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 			System.out.println(e.getMessage());
 		}
 	}
@@ -597,7 +598,15 @@ public class ParsSemanticAnal {
 			
 			System.out.println(lexicalUnit);
 			if(lexicalUnit == IDENTIFIER){
-				System.out.println(cobolScanner.getTableOfSymbols().get(currentToken.getValue()).getValue());
+				
+				Map<String,Symbol<?>> tableOfSymbols = cobolScanner.getTableOfSymbols();
+				System.out.println(currentToken.getValue() + " =========");
+				for(String identifier:tableOfSymbols.keySet()){
+					System.out.println(identifier);
+				}
+				System.out.println("=========");
+				Symbol<String> s = (Symbol<String>) tableOfSymbols.get((String)currentToken.getValue());
+				//System.out.println(s.getValue());
 			}
 			currentToken = cobolScanner.next_token();
 		}	
