@@ -17,7 +17,7 @@ public class ParsSemanticAnal {
 			e.printStackTrace();
 			System.out.println(e.getMessage());
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			System.out.println(e.getMessage());
 		}
 	}
@@ -135,7 +135,7 @@ public class ParsSemanticAnal {
 	}
 
 	private void syntax_error(String message) throws Exception {
-		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n");
+		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
 	}
 
 	private void PROC() throws Exception {
