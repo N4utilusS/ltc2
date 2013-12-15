@@ -534,13 +534,16 @@ public class ParsSemanticAnal {
 		case IDENTIFIER:
 			match(IDENTIFIER);
 			break;
+		case INTEGER:
+			match(INTEGER);
+			break;
 		case TRUE:
 			match(TRUE);
 			break;
 		case FALSE:
 			match(FALSE);
 			break;
-		default: syntax_error("Missing: LEFT_PARENTHESIS or IDENTIFIER or TRUE or FALSE"); break;
+		default: syntax_error("Missing: LEFT_PARENTHESIS or IDENTIFIER or INTEGER or TRUE or FALSE"); break;
 		}
 	}
 
@@ -594,7 +597,7 @@ public class ParsSemanticAnal {
 			currentToken = cobolScanner.next_token();
 			System.out.println(lexicalUnit);
 			if(lexicalUnit == IDENTIFIER){
-				System.out.println(cobolScanner.getTableOfSymbols().get(lexicalUnit).CONTENT);
+				System.out.println(cobolScanner.getTableOfSymbols().get(lexicalUnit));
 			}
 		}	
 	}
