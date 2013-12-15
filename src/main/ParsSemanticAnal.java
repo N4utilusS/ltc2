@@ -15,10 +15,10 @@ public class ParsSemanticAnal {
 			PROGRAM();
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.out.println(e.getMessage());
+			//System.out.println("PROBLEME: " + e.getMessage());
 		} catch (Exception e) {
-			//e.printStackTrace();
-			System.out.println(e.getMessage());
+			e.printStackTrace();
+			//System.out.println("PROBLEME: " + e.getMessage());
 		}
 	}
 	
@@ -184,6 +184,8 @@ public class ParsSemanticAnal {
 		case PERFORM:
 		case ACCEPT:
 		case DISPLAY:
+		case STOP:
+		case IF:
 			INSTRUCTION();
 			INSTRUCTION_LIST();
 			break;
@@ -192,7 +194,7 @@ public class ParsSemanticAnal {
 		case ELSE:
 		case END_IF:
 			break;
-		default: syntax_error("Missing: MOVE or COMPUTE or ADD or MULTIPLY or DIVIDE or PERFORM or ACCEPT or DISPLAY or SUBTRACT or END or IDENTIFIER or ELSE or END_IF"); break;
+		default: syntax_error("Missing: STOP or IF or MOVE or COMPUTE or ADD or MULTIPLY or DIVIDE or PERFORM or ACCEPT or DISPLAY or SUBTRACT or END or IDENTIFIER or ELSE or END_IF"); break;
 		}
 	}
 
@@ -597,7 +599,7 @@ public class ParsSemanticAnal {
 			
 			System.out.println(lexicalUnit);
 			if(lexicalUnit == IDENTIFIER){
-				System.out.println(cobolScanner.getTableOfSymbols().get(currentToken.getValue()).getValue());
+				System.out.println(currentToken.getValue());
 			}
 			currentToken = cobolScanner.next_token();
 		}	
