@@ -1,4 +1,5 @@
 package main;
+
 import java.util.HashMap;
 
 public class Symbol<ValueType> extends HashMap<String,Object>{

@@ -1,4 +1,5 @@
 package main;
+
 public enum LexicalUnit{
 	IDENTIFICATION(1),
 	DIVISION(2),
@@ -37,7 +38,7 @@ public enum LexicalUnit{
 	OR(35),
 	IF(36),
 	ELSE(37),
-	END_ID(38),
+	END_IF(38),
 	PERFORM(39),
 	UNTIL(40),
 	ACCEPT(41),
@@ -60,7 +61,8 @@ public enum LexicalUnit{
 	STRING(58),
 	IMAGE(59),
 	IDENTIFIER(60),
-	EOF(61)
+	EOF(61),
+	THEN(62)
 	;
 
 	public final int SYMBOL_ID;

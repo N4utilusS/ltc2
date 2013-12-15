@@ -189,9 +189,9 @@ public class ParsSemanticAnal {
 		case IDENTIFIER :
 		case END:
 		case ELSE:
-		case END_ID: //case ENDIF:
+		case END_IF:
 			break;
-		default: syntax_error("Missing: MOVE or COMPUTE or ADD or MULTIPLY or DIVIDE or PERFORM or ACCEPT or DISPLAY or SUBTRACT or END or IDENTIFIER or ELSE or END_ID"); break;
+		default: syntax_error("Missing: MOVE or COMPUTE or ADD or MULTIPLY or DIVIDE or PERFORM or ACCEPT or DISPLAY or SUBTRACT or END or IDENTIFIER or ELSE or END_IF"); break;
 		}
 	}
 
@@ -282,7 +282,7 @@ public class ParsSemanticAnal {
 		case IF : 
 			match(IF);
 			EXPRESSION();
-			//match(THEN);
+			match(THEN);
 			INSTRUCTION_LIST();
 			IF_END();
 			break;
@@ -295,12 +295,12 @@ public class ParsSemanticAnal {
 		case ELSE : 
 			match(ELSE);
 			INSTRUCTION_LIST();
-			match(END_ID); // match(END_IF);
+			match(END_IF);
 			break;
-		case END_ID: // case END_IF:
-			match(END_ID); // match(END_IF);
+		case END_IF:
+			match(END_IF);
 			break;
-		default: syntax_error("Missing: ELSE or END_ID"); break;
+		default: syntax_error("Missing: ELSE or END_IF"); break;
 		}
 	}
 
@@ -371,7 +371,7 @@ public class ParsSemanticAnal {
 		case GIVING:
 		case COMMA:
 		case RIGHT_PARENTHESIS:
-		//case THEN:
+		case THEN:
 		case FROM:
 			break;
 		default: syntax_error("Missing: OR or END_OF_INSTRUCTION or TO or GIVING or COMMA or RIGHT_PARENTHESIS or THEN or FROM"); break;
@@ -395,7 +395,7 @@ public class ParsSemanticAnal {
 		case COMMA:
 		case OR:
 		case RIGHT_PARENTHESIS:
-		//case THEN:
+		case THEN:
 		case FROM:
 			break;
 		default: syntax_error("Missing: AND or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or RIGHT_PARENTHESIS or THEN or FROM"); break;
@@ -424,7 +424,7 @@ public class ParsSemanticAnal {
 		case OR:
 		case AND:
 		case RIGHT_PARENTHESIS:
-		//case THEN:
+		case THEN:
 		case FROM:
 			break;
 		default: syntax_error("Missing: LOWER_THAN or GREATER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or AND or RIGHT_PARENTHESIS or THEN or FROM"); break;
@@ -483,7 +483,7 @@ public class ParsSemanticAnal {
 		case LOWER_OR_EQUALS:
 		case GREATER_OR_EQUALS:
 		case EQUALS_SIGN:
-		//case THEN:
+		case THEN:
 		case FROM:
 			break;
 		default: syntax_error("Missing: ASTERISK or SLASH or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or AND or RIGHT_PARENTHESIS or MINUS_SIGN or PLUS_SIGN or LOWER_THAN or GREATER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN or THEN or FROM"); break;
@@ -562,7 +562,7 @@ public class ParsSemanticAnal {
 		case LOWER_OR_EQUALS:
 		case GREATER_OR_EQUALS:
 		case EQUALS_SIGN:
-		//case THEN:
+		case THEN:
 		case FROM:
 			break;
 		default: syntax_error("Missing: PLUS_SIGN or MINUS_SIGN or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or AND or RIGHT_PARENTHESIS or LOWER_THAN or GREATER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN or THEN or FROM"); break;
