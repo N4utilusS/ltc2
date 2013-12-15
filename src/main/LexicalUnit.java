@@ -1,3 +1,4 @@
+package main;
 public enum LexicalUnit{
 	IDENTIFICATION(1),
 	DIVISION(2),

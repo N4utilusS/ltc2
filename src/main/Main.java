@@ -1,3 +1,4 @@
+package main;
 import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
@@ -15,6 +16,9 @@ public class Main{
 	public static void main(String args[])throws Exception{
 		// Apply the lexical analyzer
 		Scanner cobolScanner = new Scanner(System.in);
+		
+		ParsSemanticAnal parsSemanticAnal = new ParsSemanticAnal();
+		
 		Symbol lexicalUnit;
 		do{
 			lexicalUnit = cobolScanner.next_token();
