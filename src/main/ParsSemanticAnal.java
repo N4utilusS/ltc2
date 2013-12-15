@@ -1,4 +1,7 @@
 package main;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import static main.LexicalUnit.*;
@@ -8,8 +11,9 @@ public class ParsSemanticAnal {
 	private Scanner cobolScanner;
 	private Symbol currentToken;
 
-	public ParsSemanticAnal(){
-		this.cobolScanner = new Scanner(System.in);
+	public ParsSemanticAnal() throws FileNotFoundException{
+		//this.cobolScanner = new Scanner(System.in);
+		this.cobolScanner = new Scanner(new FileInputStream(new File("entree.txt")));
 		try {
 			currentToken = this.cobolScanner.next_token();
 			PROGRAM();
@@ -27,7 +31,7 @@ public class ParsSemanticAnal {
 	}
 
 	private void PROGRAM() throws Exception {
-		IDENT(); ENV(); DATA(); PROC();
+		IDENT(); ENV(); DATA(); PROC(); match(EOF);
 	}
 
 	private void DATA() throws Exception {
