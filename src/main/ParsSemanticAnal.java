@@ -99,6 +99,7 @@ public class ParsSemanticAnal {
 		match(DIVISION);
 		END_INST();
 		match(PROGRAM_ID);
+		match(DOT);
 		match(IDENTIFIER);
 		END_INST();
 		match(AUTHOR);
@@ -592,6 +593,9 @@ public class ParsSemanticAnal {
 		else{
 			currentToken = cobolScanner.next_token();
 			System.out.println(lexicalUnit);
+			if(lexicalUnit == IDENTIFIER){
+				System.out.println(cobolScanner.getTableOfSymbols().get(lexicalUnit).CONTENT);
+			}
 		}	
 	}
 }

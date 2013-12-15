@@ -7,7 +7,8 @@ public class Symbol<ValueType> extends HashMap<String,Object>{
 		LINE		= "LINE",
 		COLUMN	= "COLUMN",
 		CONTENT	= "CONTENT",
-		IMAGE		= "IMAGE";
+		IMAGE		= "IMAGE",
+		TYPE = "TYPE";
 		
 	private ValueType value;
 	public final LexicalUnit unit;
