@@ -12,14 +12,18 @@ public class ParsSemanticAnal {
 		this.cobolScanner = new Scanner(System.in);
 		try {
 			currentToken = this.cobolScanner.next_token();
-			this.PROGRAM();
+			PROGRAM();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.out.println(e.getMessage());
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
+	}
+	
+	public Scanner getScanner(){
+		return this.cobolScanner;
 	}
 
 	private void PROGRAM() throws Exception {
@@ -585,8 +589,9 @@ public class ParsSemanticAnal {
 		if(currentToken.unit != lexicalUnit){
 			syntax_error("missing:" +  lexicalUnit);
 		}
-		else
+		else{
 			currentToken = cobolScanner.next_token();
+			System.out.println(lexicalUnit);
+		}	
 	}
-
 }

@@ -15,20 +15,20 @@ the given grammar. The modification is the following:
 public class Main{
 	public static void main(String args[])throws Exception{
 		// Apply the lexical analyzer
-		Scanner cobolScanner = new Scanner(System.in);
+//		Scanner cobolScanner = new Scanner(System.in);
 		
 		ParsSemanticAnal parsSemanticAnal = new ParsSemanticAnal();
 		
-		Symbol lexicalUnit;
-		do{
-			lexicalUnit = cobolScanner.next_token();
-			if(lexicalUnit != null){
-				System.out.println("token: "+lexicalUnit.getValue()+" \tlexical unit: "+lexicalUnit.unit.toString());
-			}
-		}while(lexicalUnit == null || !lexicalUnit.unit.equals(LexicalUnit.EOF));
-		
+//		Symbol lexicalUnit;
+//		do{
+//			lexicalUnit = cobolScanner.next_token();
+//			if(lexicalUnit != null){
+//				System.out.println("token: "+lexicalUnit.getValue()+" \tlexical unit: "+lexicalUnit.unit.toString());
+//			}
+//		}while(lexicalUnit == null || !lexicalUnit.unit.equals(LexicalUnit.EOF));
+//		
 		// Printing the table
-		final Map<String,Symbol<?>> tableOfSymbols = cobolScanner.getTableOfSymbols();
+		final Map<String,Symbol<?>> tableOfSymbols = parsSemanticAnal.getScanner().getTableOfSymbols();
 		List<Symbol<String>> variables = new ArrayList<Symbol<String>>();
 		List<Symbol<String>> labels	 = new ArrayList<Symbol<String>>();
 		// we distinguish vars/labels
