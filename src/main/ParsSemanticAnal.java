@@ -12,6 +12,7 @@ public class ParsSemanticAnal {
 	private Symbol<String> currentToken;
 
 	public ParsSemanticAnal(){
+		//this.cobolScanner = new Scanner(System.in);
 		try {
 			this.cobolScanner = new Scanner(new FileInputStream(new File("entree.txt")));
 			currentToken = this.cobolScanner.next_token();
@@ -30,7 +31,7 @@ public class ParsSemanticAnal {
 	}
 
 	private void PROGRAM() throws Exception {
-		IDENT(); ENV(); DATA(); PROC();
+		IDENT(); ENV(); DATA(); PROC(); match(EOF);
 	}
 
 	private void DATA() throws Exception {
