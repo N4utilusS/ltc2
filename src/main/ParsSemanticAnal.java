@@ -2,7 +2,8 @@ package main;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import static main.LexicalUnit.*;
 
@@ -10,8 +11,15 @@ public class ParsSemanticAnal {
 
 	private Scanner cobolScanner;
 	private Symbol<String> currentToken;
+	private boolean pID = false;
+	private String programID = null;
+	private Symbol<String> currentIdentifier;
+	private Symbol<String> previousToken;
+	private List<Symbol<String>> usedLabels, labels;
 
 	public ParsSemanticAnal(){
+		this.usedLabels = new ArrayList<Symbol<String>>();
+		this.labels = new ArrayList<Symbol<String>>();
 		//this.cobolScanner = new Scanner(System.in);
 		try {
 			this.cobolScanner = new Scanner(new FileInputStream(new File("entree.txt")));
@@ -21,7 +29,7 @@ public class ParsSemanticAnal {
 			e.printStackTrace();
 			//System.out.println("PROBLEME: " + e.getMessage());
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			System.out.println(e.getMessage());
 		}
 	}
@@ -105,6 +113,8 @@ public class ParsSemanticAnal {
 		match(PROGRAM_ID);
 		match(DOT);
 		match(IDENTIFIER);
+		// Save program id:
+		this.programID = previousToken.getValue();
 		END_INST();
 		match(AUTHOR);
 		match(DOT);
@@ -118,14 +128,15 @@ public class ParsSemanticAnal {
 	}
 
 	private void WORDS() throws Exception { 
-		match(IDENTIFIER);
+		WORD();
 		WORDS_REC();	
 	}
 
 	private void WORDS_REC() throws Exception {
 		switch(currentToken.unit){
-		case IDENTIFIER : 
-			match(IDENTIFIER);
+		case IDENTIFIER :
+		case INTEGER :
+			WORD();
 			WORDS_REC();
 			break;
 		case END_OF_INSTRUCTION : 
@@ -136,10 +147,6 @@ public class ParsSemanticAnal {
 
 	private void END_INST() throws Exception {
 		match(END_OF_INSTRUCTION);	
-	}
-
-	private void syntax_error(String message) throws Exception {
-		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
 	}
 
 	private void PROC() throws Exception {
@@ -153,6 +160,9 @@ public class ParsSemanticAnal {
 		match(END);
 		match(PROGRAM);
 		match(IDENTIFIER);
+		// Check with the saved id if the same:
+		if (!this.programID.equals(previousToken.getValue()))	// Si ça ne correspond pas.
+			this.semantic_error("ProgramID do not match: " + this.programID + " is not " + previousToken.getValue());
 		match(DOT);
 	}
 
@@ -267,6 +277,8 @@ public class ParsSemanticAnal {
 	private void CALL() throws Exception {
 		match(PERFORM);
 		match(IDENTIFIER);
+		// Save the label id for further check.
+		this.usedLabels.add(previousToken);
 		CALL_FACT();
 	}
 
@@ -372,6 +384,7 @@ public class ParsSemanticAnal {
 		case OR : 
 			match(OR);
 			CONDITION();
+			EXPRESSION_REC();
 			break;
 		case END_OF_INSTRUCTION : 
 		case TO:
@@ -395,6 +408,7 @@ public class ParsSemanticAnal {
 		case AND : 
 			match(AND);
 			SUBCONDITION();
+			CONDITION_REC();
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -411,10 +425,10 @@ public class ParsSemanticAnal {
 
 	private void SUBCONDITION() throws Exception {
 		VALUE();
-		SUBCON_REC();
+		SUBCON_FACT();
 	}
 
-	private void SUBCON_REC() throws Exception {
+	private void SUBCON_FACT() throws Exception {
 		switch(currentToken.unit){
 		case LOWER_THAN : 
 		case GREATER_THAN:
@@ -466,15 +480,16 @@ public class ParsSemanticAnal {
 
 	private void TERM() throws Exception {
 		FACTOR();
-		TERM__REC();
+		TERM_REC();
 	}
 
-	private void TERM__REC() throws Exception {
+	private void TERM_REC() throws Exception {
 		switch(currentToken.unit){
 		case ASTERISK :
 		case SLASH:
 			MUL_DIV();
 			FACTOR();
+			TERM_REC();
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -559,6 +574,7 @@ public class ParsSemanticAnal {
 		case MINUS_SIGN:
 			PLUS_MINUS();
 			TERM();
+			VALUE_REC();
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -593,28 +609,39 @@ public class ParsSemanticAnal {
 
 	private void LABEL() throws Exception {
 		match(IDENTIFIER);
+		// Save the id for further verifications.
+		this.labels.add(previousToken);
+	}
+	
+	private void WORD() throws Exception {
+		switch(currentToken.unit){
+		case IDENTIFIER : 
+			match(IDENTIFIER);
+			break;
+		case INTEGER : 
+			match(INTEGER);
+			break;
+		default: syntax_error("Missing: IDENTIFIER or INTEGER"); break;
+		}
 	}
 
 	private void match(LexicalUnit lexicalUnit) throws Exception{
 		if(currentToken.unit != lexicalUnit){
-			syntax_error("missing:" +  lexicalUnit);
+			syntax_error("missing:" +  lexicalUnit);	// Si ce n'est pas le type qu'on attendait...
 		}
 		else{
 			
-			System.out.println(lexicalUnit);
-			if(lexicalUnit == IDENTIFIER){
-				
-				Map<String,Symbol<?>> tableOfSymbols = cobolScanner.getTableOfSymbols();
-				System.out.println(currentToken.getValue() + " =========");
-				for(String identifier:tableOfSymbols.keySet()){
-					System.out.println(identifier);
-				}
-				System.out.println("=========");
-				Symbol<String> s = (Symbol<String>) tableOfSymbols.get((String)currentToken.getValue());
-				//System.out.println(s.getValue());
-
-			}
+			System.out.println(lexicalUnit + ": " + currentToken.getValue());
+			previousToken = currentToken;
 			currentToken = cobolScanner.next_token();
-		}	
+		}
+	}
+	
+	private void syntax_error(String message) throws Exception {
+		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
+	}
+	
+	private void semantic_error(String message) throws Exception {
+		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
 	}
 }
