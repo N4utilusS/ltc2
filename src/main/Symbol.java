@@ -22,4 +22,16 @@ public class Symbol<ValueType> extends HashMap<String,Object>{
 	public void setValue(ValueType value){
 		this.value = value;
 	}
+	
+	public boolean equals(Object obj){
+		if (obj == this)
+			return true;
+		else
+			if (obj instanceof Symbol<?>){
+				@SuppressWarnings("unchecked")
+				Symbol<?> s = (Symbol<String>) obj;	
+				return(super.equals(s) && this.value.equals(s.value) && this.unit == s.unit);
+			}
+		return false;
+	}
 }

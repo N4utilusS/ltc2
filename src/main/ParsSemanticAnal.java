@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static main.LexicalUnit.*;
 
@@ -15,16 +16,24 @@ public class ParsSemanticAnal {
 	private String programID = null;
 	private Symbol<String> currentIdentifier;
 	private Symbol<String> previousToken;
-	private List<Symbol<String>> usedLabels, labels;
+	private List<Symbol<String>> usedLabels;
+	private Map<String,Symbol<?>> tableOfSymbols;
 
 	public ParsSemanticAnal(){
+		this.tableOfSymbols = cobolScanner.getTableOfSymbols();
 		this.usedLabels = new ArrayList<Symbol<String>>();
-		this.labels = new ArrayList<Symbol<String>>();
 		//this.cobolScanner = new Scanner(System.in);
 		try {
 			this.cobolScanner = new Scanner(new FileInputStream(new File("entree.txt")));
 			currentToken = this.cobolScanner.next_token();
 			PROGRAM();
+
+			// Check if the labels used are defined.
+
+			for (Symbol<String> s : this.usedLabels){
+				if (!tableOfSymbols.containsKey(s.getValue()))
+					throw new Exception("LINE: " + s.get(Symbol.LINE) + "\nUse of undefined label: " + s.getValue() + "\n");
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			//System.out.println("PROBLEME: " + e.getMessage());
@@ -33,7 +42,7 @@ public class ParsSemanticAnal {
 			System.out.println(e.getMessage());
 		}
 	}
-	
+
 	public Scanner getScanner(){
 		return this.cobolScanner;
 	}
@@ -271,6 +280,9 @@ public class ParsSemanticAnal {
 	private void READ() throws Exception {
 		match(ACCEPT);
 		match(IDENTIFIER);
+		// Add the variable name to the list for further check.
+		if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 		END_INST();
 	}
 
@@ -278,7 +290,8 @@ public class ParsSemanticAnal {
 		match(PERFORM);
 		match(IDENTIFIER);
 		// Save the label id for further check.
-		this.usedLabels.add(previousToken);
+		if (!this.usedLabels.contains(previousToken))
+			this.usedLabels.add(previousToken);
 		CALL_FACT();
 	}
 
@@ -330,11 +343,17 @@ public class ParsSemanticAnal {
 			EXPRESSION();
 			match(TO);
 			match(IDENTIFIER);
+			// Add the variable name to the list for further check.
+			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			END_INST();
 			break;
 		case COMPUTE :
 			match(COMPUTE);
 			match(IDENTIFIER);
+			// Add the variable name to the list for further check.
+			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			match(EQUALS_SIGN);
 			EXPRESSION();
 			END_INST();
@@ -344,6 +363,9 @@ public class ParsSemanticAnal {
 			EXPRESSION();
 			match(TO);
 			match(IDENTIFIER);
+			// Add the variable name to the list for further check.
+			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			END_INST();
 			break;
 		case SUBTRACT:
@@ -351,6 +373,9 @@ public class ParsSemanticAnal {
 			EXPRESSION();
 			match(FROM);
 			match(IDENTIFIER);
+			// Add the variable name to the list for further check.
+			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			END_INST();
 			break;
 		case MULTIPLY:
@@ -372,6 +397,9 @@ public class ParsSemanticAnal {
 		EXPRESSION();
 		match(GIVING);
 		match(IDENTIFIER);
+		// Add the variable name to the list for further check.
+		if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 	}
 
 	private void EXPRESSION() throws Exception {
@@ -554,6 +582,9 @@ public class ParsSemanticAnal {
 			break;
 		case IDENTIFIER:
 			match(IDENTIFIER);
+			// Add the variable name to the list for further check.
+			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			break;
 		case INTEGER:
 			match(INTEGER);
@@ -609,10 +640,8 @@ public class ParsSemanticAnal {
 
 	private void LABEL() throws Exception {
 		match(IDENTIFIER);
-		// Save the id for further verifications.
-		this.labels.add(previousToken);
 	}
-	
+
 	private void WORD() throws Exception {
 		switch(currentToken.unit){
 		case IDENTIFIER : 
@@ -630,17 +659,17 @@ public class ParsSemanticAnal {
 			syntax_error("missing:" +  lexicalUnit);	// Si ce n'est pas le type qu'on attendait...
 		}
 		else{
-			
+
 			System.out.println(lexicalUnit + ": " + currentToken.getValue());
 			previousToken = currentToken;
 			currentToken = cobolScanner.next_token();
 		}
 	}
-	
+
 	private void syntax_error(String message) throws Exception {
 		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
 	}
-	
+
 	private void semantic_error(String message) throws Exception {
 		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
 	}
