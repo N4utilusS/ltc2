@@ -20,11 +20,11 @@ public class ParsSemanticAnal {
 	private Map<String,Symbol<?>> tableOfSymbols;
 
 	public ParsSemanticAnal(){
-		this.tableOfSymbols = cobolScanner.getTableOfSymbols();
 		this.usedLabels = new ArrayList<Symbol<String>>();
 		//this.cobolScanner = new Scanner(System.in);
 		try {
 			this.cobolScanner = new Scanner(new FileInputStream(new File("entree.txt")));
+			this.tableOfSymbols = cobolScanner.getTableOfSymbols();
 			currentToken = this.cobolScanner.next_token();
 			PROGRAM();
 
