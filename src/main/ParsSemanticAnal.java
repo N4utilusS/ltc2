@@ -1,4 +1,6 @@
 package main;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
 
@@ -10,13 +12,13 @@ public class ParsSemanticAnal {
 	private Symbol<String> currentToken;
 
 	public ParsSemanticAnal(){
-		this.cobolScanner = new Scanner(System.in);
 		try {
+			this.cobolScanner = new Scanner(new FileInputStream(new File("entree.txt")));
 			currentToken = this.cobolScanner.next_token();
 			PROGRAM();
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.out.println(e.getMessage());
+			//System.out.println("PROBLEME: " + e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -185,6 +187,8 @@ public class ParsSemanticAnal {
 		case PERFORM:
 		case ACCEPT:
 		case DISPLAY:
+		case STOP:
+		case IF:
 			INSTRUCTION();
 			INSTRUCTION_LIST();
 			break;
@@ -193,7 +197,7 @@ public class ParsSemanticAnal {
 		case ELSE:
 		case END_IF:
 			break;
-		default: syntax_error("Missing: MOVE or COMPUTE or ADD or MULTIPLY or DIVIDE or PERFORM or ACCEPT or DISPLAY or SUBTRACT or END or IDENTIFIER or ELSE or END_IF"); break;
+		default: syntax_error("Missing: STOP or IF or MOVE or COMPUTE or ADD or MULTIPLY or DIVIDE or PERFORM or ACCEPT or DISPLAY or SUBTRACT or END or IDENTIFIER or ELSE or END_IF"); break;
 		}
 	}
 
@@ -607,6 +611,7 @@ public class ParsSemanticAnal {
 				System.out.println("=========");
 				Symbol<String> s = (Symbol<String>) tableOfSymbols.get((String)currentToken.getValue());
 				//System.out.println(s.getValue());
+
 			}
 			currentToken = cobolScanner.next_token();
 		}	
