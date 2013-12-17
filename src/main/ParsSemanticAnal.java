@@ -280,7 +280,7 @@ public class ParsSemanticAnal {
 	private void READ() throws Exception {
 		match(ACCEPT);
 		match(IDENTIFIER);
-		// Add the variable name to the list for further check.
+		// Check if declared variable.
 		if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 		END_INST();
@@ -343,7 +343,7 @@ public class ParsSemanticAnal {
 			EXPRESSION();
 			match(TO);
 			match(IDENTIFIER);
-			// Add the variable name to the list for further check.
+			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			END_INST();
@@ -351,7 +351,7 @@ public class ParsSemanticAnal {
 		case COMPUTE :
 			match(COMPUTE);
 			match(IDENTIFIER);
-			// Add the variable name to the list for further check.
+			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			match(EQUALS_SIGN);
@@ -363,7 +363,7 @@ public class ParsSemanticAnal {
 			EXPRESSION();
 			match(TO);
 			match(IDENTIFIER);
-			// Add the variable name to the list for further check.
+			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			END_INST();
@@ -373,7 +373,7 @@ public class ParsSemanticAnal {
 			EXPRESSION();
 			match(FROM);
 			match(IDENTIFIER);
-			// Add the variable name to the list for further check.
+			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			END_INST();
@@ -397,14 +397,16 @@ public class ParsSemanticAnal {
 		EXPRESSION();
 		match(GIVING);
 		match(IDENTIFIER);
-		// Add the variable name to the list for further check.
+		// Check if declared variable.
 		if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 	}
 
-	private void EXPRESSION() throws Exception {
-		CONDITION();
-		EXPRESSION_REC();
+	private LexicalUnit EXPRESSION() throws Exception {
+		LexicalUnit lu1, lu2;
+		lu1 = CONDITION();
+		lu2 = EXPRESSION_REC();
+		return = resultType(lu1, lu2);
 	}
 
 	private void EXPRESSION_REC() throws Exception {
@@ -573,30 +575,37 @@ public class ParsSemanticAnal {
 		}
 	}
 
-	private void NUMBER() throws Exception {
+	private LexicalUnit NUMBER() throws Exception {
+		LexicalUnit lu;
+
 		switch(currentToken.unit){
 		case LEFT_PARENTHESIS:
 			match(LEFT_PARENTHESIS);
-			EXPRESSION();
+			lu = EXPRESSION();
 			match(RIGHT_PARENTHESIS);
 			break;
 		case IDENTIFIER:
 			match(IDENTIFIER);
-			// Add the variable name to the list for further check.
+			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
+			lu = previousToken.unit;
 			break;
 		case INTEGER:
 			match(INTEGER);
+			lu = INTEGER;
 			break;
 		case TRUE:
 			match(TRUE);
+			lu = INTEGER;
 			break;
 		case FALSE:
 			match(FALSE);
+			lu = INTEGER;
 			break;
 		default: syntax_error("Missing: LEFT_PARENTHESIS or IDENTIFIER or INTEGER or TRUE or FALSE"); break;
 		}
+		return lu;
 	}
 
 	private void VALUE_REC() throws Exception {
@@ -672,5 +681,16 @@ public class ParsSemanticAnal {
 
 	private void semantic_error(String message) throws Exception {
 		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
+	}
+
+	private LexicalUnit resultType(LexicalUnit lu1, LexicalUnit lu2) throws Exception {
+		switch (lu1){
+		case INTEGER:
+			if(lu2 == INTEGER) return INTEGER;
+			break;
+		default:
+			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + lu1 + " and " + lu2 + " are not compatible.");
+		}
+		return null;
 	}
 }

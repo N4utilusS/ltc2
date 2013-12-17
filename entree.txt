@@ -30,7 +30,7 @@ accept b.
 perform find until b = 0.
 /call find label until b equals 0.
 display 'valeur:'.
-display a+a*b - t.
+display a.
 /write the content of a on stdout.
 stop run.
 /stop the program.
