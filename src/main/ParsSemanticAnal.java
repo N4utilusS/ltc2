@@ -684,13 +684,11 @@ public class ParsSemanticAnal {
 	}
 
 	private LexicalUnit resultType(LexicalUnit lu1, LexicalUnit lu2) throws Exception {
-		switch (lu1){
-		case INTEGER:
-			if(lu2 == INTEGER) return INTEGER;
-			break;
-		default:
+		LexicalUnit l = resultType(lu1, lu2);
+		
+		if (l == null)	// null means no existing compatibility.
 			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + lu1 + " and " + lu2 + " are not compatible.");
-		}
-		return null;
+		
+		return l;
 	}
 }

@@ -66,7 +66,8 @@ public enum LexicalUnit{
 	;
 
 	public final int SYMBOL_ID;
-	
+	private static LexicalUnit[][] types;
+
 	private LexicalUnit(final int uniqueIdentifier){
 		SYMBOL_ID = uniqueIdentifier;
 	}
@@ -82,22 +83,22 @@ public enum LexicalUnit{
 		if(rawText.isEmpty()) return null;
 		if(rawText.length()<2){//1
 			switch(rawText.charAt(0)){
-				case '.': return LexicalUnit.DOT;
-				case ',': return LexicalUnit.COMMA;
-				case '(': return LexicalUnit.LEFT_PARENTHESIS;
-				case ')': return RIGHT_PARENTHESIS;
-				case '-': return LexicalUnit.MINUS_SIGN;
-				case '+': return LexicalUnit.PLUS_SIGN;
-				case '=': return LexicalUnit.EQUALS_SIGN;
-				case '*': return LexicalUnit.ASTERISK;
-				case '/': return LexicalUnit.SLASH;
-				case '<': return LexicalUnit.LOWER_THAN;
-				case '>': return LexicalUnit.GREATER_THAN;
+			case '.': return LexicalUnit.DOT;
+			case ',': return LexicalUnit.COMMA;
+			case '(': return LexicalUnit.LEFT_PARENTHESIS;
+			case ')': return RIGHT_PARENTHESIS;
+			case '-': return LexicalUnit.MINUS_SIGN;
+			case '+': return LexicalUnit.PLUS_SIGN;
+			case '=': return LexicalUnit.EQUALS_SIGN;
+			case '*': return LexicalUnit.ASTERISK;
+			case '/': return LexicalUnit.SLASH;
+			case '<': return LexicalUnit.LOWER_THAN;
+			case '>': return LexicalUnit.GREATER_THAN;
 			}
 		}else if(rawText.length()<3 && rawText.charAt(1)=='='){
 			switch(rawText.charAt(0)){
-				case '<': return LexicalUnit.LOWER_OR_EQUALS;
-				case '>': return LexicalUnit.GREATER_OR_EQUALS;
+			case '<': return LexicalUnit.LOWER_OR_EQUALS;
+			case '>': return LexicalUnit.GREATER_OR_EQUALS;
 			}
 		}
 		return null;
@@ -107,5 +108,31 @@ public enum LexicalUnit{
 			if(unit.SYMBOL_ID == uniqueIdentifier)
 				return unit;
 		return null;
+	}
+	
+	private static void setResultingType(LexicalUnit lu1, LexicalUnit lu2, LexicalUnit res){
+		if (lu1.SYMBOL_ID > lu2.SYMBOL_ID)
+			types[lu2.SYMBOL_ID-1][lu1.SYMBOL_ID-1] = res;	// So we only need to fill the tab for lu1-lu2 and not also for lu2-lu1 (same thing).
+
+		else
+			types[lu1.SYMBOL_ID-1][lu2.SYMBOL_ID-1] = res;
+	}
+
+	public static LexicalUnit resultType(LexicalUnit lu1, LexicalUnit lu2) throws Exception {
+
+		if (types == null){
+			int length = values().length;
+			types = new LexicalUnit[length][length];
+
+			setResultingType(INTEGER, INTEGER, INTEGER);
+			setResultingType(INTEGER, INTEGER, INTEGER);
+		}
+		LexicalUnit lu;
+		if(lu1.SYMBOL_ID > lu2.SYMBOL_ID)
+			lu = types[lu2.SYMBOL_ID-1][lu1.SYMBOL_ID-1];
+		else
+			lu = types[lu1.SYMBOL_ID-1][lu2.SYMBOL_ID-1];
+		
+		return lu;
 	}
 }
