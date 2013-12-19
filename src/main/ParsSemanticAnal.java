@@ -409,12 +409,13 @@ public class ParsSemanticAnal {
 	}
 
 	private LexicalUnit EXPRESSION_REC() throws Exception {
-		LexicalUnit lu1, lu2, lu;
+		LexicalUnit lu1, lu2, lu = null;
 		switch(currentToken.unit){
 		case OR :
 			match(OR);
-			CONDITION();
-			EXPRESSION_REC();
+			lu1 = CONDITION();
+			lu2 = EXPRESSION_REC();
+			lu = resultType(lu1, Operator.PLUS, lu2);
 			break;
 		case END_OF_INSTRUCTION : 
 		case TO:
@@ -426,11 +427,13 @@ public class ParsSemanticAnal {
 			break;
 		default: syntax_error("Missing: OR or END_OF_INSTRUCTION or TO or GIVING or COMMA or RIGHT_PARENTHESIS or THEN or FROM"); break;
 		}
+		return lu;
 	}
 
-	private void CONDITION() throws Exception {
+	private LexicalUnit CONDITION() throws Exception {
 		SUBCONDITION();
 		CONDITION_REC();
+		return null;
 	}
 
 	private void CONDITION_REC() throws Exception {
