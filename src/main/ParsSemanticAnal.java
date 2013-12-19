@@ -402,20 +402,17 @@ public class ParsSemanticAnal {
 	}
 
 	private LexicalUnit EXPRESSION() throws Exception {
-		LexicalUnit lu1, lu2;
-		lu1 = CONDITION();
-		lu2 = EXPRESSION_REC();
-		return resultType(lu1, Operator.PLUS, lu2);
+		LexicalUnit l = CONDITION();
+		l = EXPRESSION_REC(l);
+		return l;
 	}
 
-	private LexicalUnit EXPRESSION_REC() throws Exception {
-		LexicalUnit lu1, lu2, lu = null;
+	private LexicalUnit EXPRESSION_REC(LexicalUnit l) throws Exception {
 		switch(currentToken.unit){
 		case OR :
 			match(OR);
-			lu1 = CONDITION();
-			lu2 = EXPRESSION_REC();
-			lu = resultType(lu1, Operator.PLUS, lu2);
+			LexicalUnit lu1 = CONDITION();
+			l = EXPRESSION_REC(resultType(l, Operator.OR, lu1));
 			break;
 		case END_OF_INSTRUCTION : 
 		case TO:
@@ -427,21 +424,21 @@ public class ParsSemanticAnal {
 			break;
 		default: syntax_error("Missing: OR or END_OF_INSTRUCTION or TO or GIVING or COMMA or RIGHT_PARENTHESIS or THEN or FROM"); break;
 		}
-		return lu;
+		return l;
 	}
 
 	private LexicalUnit CONDITION() throws Exception {
-		SUBCONDITION();
-		CONDITION_REC();
-		return null;
+		LexicalUnit l = SUBCONDITION();
+		l = CONDITION_REC(l);
+		return l;
 	}
 
-	private void CONDITION_REC() throws Exception {
+	private LexicalUnit CONDITION_REC(LexicalUnit l) throws Exception {
 		switch(currentToken.unit){
 		case AND : 
 			match(AND);
-			SUBCONDITION();
-			CONDITION_REC();
+			LexicalUnit lu1 = SUBCONDITION();
+			l = CONDITION_REC(resultType(l, Operator.AND, lu1));
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -454,9 +451,10 @@ public class ParsSemanticAnal {
 			break;
 		default: syntax_error("Missing: AND or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or RIGHT_PARENTHESIS or THEN or FROM"); break;
 		}
+		return l;
 	}
 
-	private void SUBCONDITION() throws Exception {
+	private LexicalUnit SUBCONDITION() throws Exception {
 		VALUE();
 		SUBCON_FACT();
 	}
@@ -506,9 +504,10 @@ public class ParsSemanticAnal {
 		}
 	}
 
-	private void VALUE() throws Exception {
-		TERM();
-		VALUE_REC();
+	private LexicalUnit VALUE() throws Exception {
+		LexicalUnit l = TERM();
+		l = VALUE_REC(l);
+		return l;
 	}
 
 	private void TERM() throws Exception {
@@ -611,13 +610,14 @@ public class ParsSemanticAnal {
 		return lu;
 	}
 
-	private void VALUE_REC() throws Exception {
+	private LexicalUnit VALUE_REC(LexicalUnit l) throws Exception {
+		
 		switch(currentToken.unit){
 		case PLUS_SIGN :
 		case MINUS_SIGN:
-			PLUS_MINUS();
-			TERM();
-			VALUE_REC();
+			Operator o = PLUS_MINUS();
+			LexicalUnit lu1 = TERM();
+			l = VALUE_REC(resultType(l, o, lu1));
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -636,6 +636,7 @@ public class ParsSemanticAnal {
 			break;
 		default: syntax_error("Missing: PLUS_SIGN or MINUS_SIGN or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or AND or RIGHT_PARENTHESIS or LOWER_THAN or GREATER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN or THEN or FROM"); break;
 		}
+		return l;
 	}
 
 	private void PLUS_MINUS() throws Exception {
