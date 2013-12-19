@@ -1,0 +1,17 @@
+package main;
+
+public enum Operator {
+	UN_MINUS,
+	NOT,
+	EQUALS,
+	LOWER_THAN,
+	GREATER_THAN,
+	LOWER_OR_EQUALS,
+	GREATER_OR_EQUALS,
+	AND,
+	OR,
+	PLUS,
+	MINUS,
+	MULTIPLY,
+	DIVIDE;
+}

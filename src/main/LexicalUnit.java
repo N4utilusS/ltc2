@@ -1,4 +1,5 @@
 package main;
+import static main.Operator.*;
 
 public enum LexicalUnit{
 	IDENTIFICATION(1),
@@ -66,7 +67,7 @@ public enum LexicalUnit{
 	;
 
 	public final int SYMBOL_ID;
-	private static LexicalUnit[][] types;
+	private static LexicalUnit[][][] types;
 
 	private LexicalUnit(final int uniqueIdentifier){
 		SYMBOL_ID = uniqueIdentifier;
@@ -109,29 +110,49 @@ public enum LexicalUnit{
 				return unit;
 		return null;
 	}
-	
-	private static void setResultingType(LexicalUnit lu1, LexicalUnit lu2, LexicalUnit res){
+
+	private static void setResultingType(LexicalUnit lu1, Operator op, LexicalUnit lu2, LexicalUnit res){
 		if (lu1.SYMBOL_ID > lu2.SYMBOL_ID)
-			types[lu2.SYMBOL_ID-1][lu1.SYMBOL_ID-1] = res;	// So we only need to fill the tab for lu1-lu2 and not also for lu2-lu1 (same thing).
+			types[lu2.SYMBOL_ID-1][lu1.SYMBOL_ID-1][op.ordinal()] = res;	// So we only need to fill the tab for lu1-lu2 and not also for lu2-lu1 (same thing).
 
 		else
-			types[lu1.SYMBOL_ID-1][lu2.SYMBOL_ID-1] = res;
+			types[lu1.SYMBOL_ID-1][lu2.SYMBOL_ID-1][op.ordinal()] = res;
 	}
 
-	public static LexicalUnit resultType(LexicalUnit lu1, LexicalUnit lu2) throws Exception {
+	/**
+	 * Returns the type of the combination of the 2 operands with the given operator.
+	 * If only one operand for the operator, repeat it in the second field.
+	 * 
+	 * @param lu1 operand 1 type
+	 * @param op Operator, @see Operator
+	 * @param lu2 operand 2 type
+	 * @return The resulting type.
+	 * @throws Exception
+	 */
+	public static LexicalUnit resultType(LexicalUnit lu1, Operator op, LexicalUnit lu2) throws Exception {
 
 		if (types == null){
 			int length = values().length;
-			types = new LexicalUnit[length][length];
+			Operator[] opTab = Operator.values();
+			types = new LexicalUnit[length][length][opTab.length];
 
-			setResultingType(INTEGER, INTEGER, INTEGER);
-			setResultingType(INTEGER, INTEGER, INTEGER);
+			for (int i = 0; i < opTab.length; ++i)	// Define the resulting type of operation on integers and between integers.
+				setResultingType(INTEGER, opTab[i], INTEGER, INTEGER);
 		}
-		LexicalUnit lu;
-		if(lu1.SYMBOL_ID > lu2.SYMBOL_ID)
-			lu = types[lu2.SYMBOL_ID-1][lu1.SYMBOL_ID-1];
-		else
-			lu = types[lu1.SYMBOL_ID-1][lu2.SYMBOL_ID-1];
+		
+		LexicalUnit lu = null;
+
+		if (lu1 != null && lu2 != null){
+
+			if(lu1.SYMBOL_ID > lu2.SYMBOL_ID)
+				lu = types[lu2.SYMBOL_ID-1][lu1.SYMBOL_ID-1][op.ordinal()];
+			else
+				lu = types[lu1.SYMBOL_ID-1][lu2.SYMBOL_ID-1][op.ordinal()];
+		}
+		else if (lu1 != null)
+			lu = lu1;
+		else if (lu2 != null)
+			lu = lu2;
 		
 		return lu;
 	}

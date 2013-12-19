@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import static main.LexicalUnit.*;
 
 public class ParsSemanticAnal {
@@ -406,12 +405,13 @@ public class ParsSemanticAnal {
 		LexicalUnit lu1, lu2;
 		lu1 = CONDITION();
 		lu2 = EXPRESSION_REC();
-		return = resultType(lu1, lu2);
+		return resultType(lu1, Operator.PLUS, lu2);
 	}
 
-	private void EXPRESSION_REC() throws Exception {
+	private LexicalUnit EXPRESSION_REC() throws Exception {
+		LexicalUnit lu1, lu2, lu;
 		switch(currentToken.unit){
-		case OR : 
+		case OR :
 			match(OR);
 			CONDITION();
 			EXPRESSION_REC();
@@ -576,7 +576,7 @@ public class ParsSemanticAnal {
 	}
 
 	private LexicalUnit NUMBER() throws Exception {
-		LexicalUnit lu;
+		LexicalUnit lu = null;
 
 		switch(currentToken.unit){
 		case LEFT_PARENTHESIS:
@@ -683,11 +683,12 @@ public class ParsSemanticAnal {
 		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
 	}
 
-	private LexicalUnit resultType(LexicalUnit lu1, LexicalUnit lu2) throws Exception {
-		LexicalUnit l = resultType(lu1, lu2);
+	private LexicalUnit resultType(LexicalUnit lu1, Operator op, LexicalUnit lu2) throws Exception {
+		LexicalUnit l = resultType(lu1, op, lu2);
 		
 		if (l == null)	// null means no existing compatibility.
-			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + lu1 + " and " + lu2 + " are not compatible.");
+			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + lu1 + " and " + lu2 + " are not compatible." +
+					"Learn to code.");
 		
 		return l;
 	}
