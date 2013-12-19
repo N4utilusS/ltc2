@@ -13,10 +13,10 @@ public class ParsSemanticAnal {
 	private Symbol<String> currentToken;
 	private boolean pID = false;
 	private String programID = null;
-	private Symbol<String> currentIdentifier;
 	private Symbol<String> previousToken;
 	private List<Symbol<String>> usedLabels;
 	private Map<String,Symbol<?>> tableOfSymbols;
+	private Image currentimage = null;
 
 	public ParsSemanticAnal(){
 		this.usedLabels = new ArrayList<Symbol<String>>();
@@ -169,7 +169,7 @@ public class ParsSemanticAnal {
 		match(PROGRAM);
 		match(IDENTIFIER);
 		// Check with the saved id if the same:
-		if (!this.programID.equals(previousToken.getValue()))	// Si Ã§a ne correspond pas.
+		if (!this.programID.equals(previousToken.getValue()))	// Si ça ne correspond pas.
 			this.semantic_error("ProgramID do not match: " + this.programID + " is not " + previousToken.getValue());
 		match(DOT);
 	}
@@ -323,7 +323,7 @@ public class ParsSemanticAnal {
 	
 	private void checkLogicalExpression(LexicalUnit l) throws Exception{
 		if(l != INTEGER)
-			throw new Exception("Expected logical expression after if.");
+			throw new Exception("Expected logical expression after if. Learn to code.");
 	}
 
 	private void IF_END() throws Exception {
@@ -341,15 +341,19 @@ public class ParsSemanticAnal {
 	}
 
 	private void ASSIGNATION() throws Exception {
+		LexicalUnit l = null;
+		Symbol<?> s = null;
 		switch(currentToken.unit){
 		case MOVE : 
 			match(MOVE);
-			EXPRESSION();
+			l = EXPRESSION();
 			match(TO);
 			match(IDENTIFIER);
 			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
+			s = this.previousToken;
+			checkAssignationCompatibility(s, l);
 			END_INST();
 			break;
 		case COMPUTE :
@@ -358,28 +362,34 @@ public class ParsSemanticAnal {
 			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
+			s = this.previousToken;
 			match(EQUALS_SIGN);
-			EXPRESSION();
+			l = EXPRESSION();
+			checkAssignationCompatibility(s, l);
 			END_INST();
 			break;
 		case ADD:
 			match(ADD);
-			EXPRESSION();
+			l = EXPRESSION();
 			match(TO);
 			match(IDENTIFIER);
 			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
+			s = this.previousToken;
+			checkAssignationCompatibility(s, l);
 			END_INST();
 			break;
 		case SUBTRACT:
 			match(SUBTRACT);
-			EXPRESSION();
+			l = EXPRESSION();
 			match(FROM);
 			match(IDENTIFIER);
 			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
+			s = this.previousToken;
+			checkAssignationCompatibility(s, l);
 			END_INST();
 			break;
 		case MULTIPLY:
@@ -717,12 +727,18 @@ public class ParsSemanticAnal {
 	}
 
 	private LexicalUnit resultType(LexicalUnit lu1, Operator op, LexicalUnit lu2) throws Exception {
-		LexicalUnit l = resultType(lu1, op, lu2);
+		LexicalUnit l = LexicalUnit.resultType(lu1, op, lu2);
 		
 		if (l == null)	// null means no existing compatibility.
 			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + lu1 + " and " + lu2 + " are not compatible." +
 					"Learn to code.");
 		
 		return l;
+	}
+	
+	private void checkAssignationCompatibility(Symbol<?> rec, LexicalUnit exp) throws Exception{
+		LexicalUnit.checkAssignationCompatibility(rec, exp);
+		
+		
 	}
 }
