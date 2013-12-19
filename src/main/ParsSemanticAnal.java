@@ -298,7 +298,7 @@ public class ParsSemanticAnal {
 		switch(currentToken.unit){
 		case UNTIL : 
 			match(UNTIL);
-			EXPRESSION();
+			LexicalUnit l = EXPRESSION(); checkLogicalExpression(l);
 			END_INST();
 			break;
 		case END_OF_INSTRUCTION:
@@ -312,7 +312,7 @@ public class ParsSemanticAnal {
 		switch(currentToken.unit){
 		case IF : 
 			match(IF);
-			EXPRESSION();
+			LexicalUnit l = EXPRESSION(); checkLogicalExpression(l);
 			match(THEN);
 			INSTRUCTION_LIST();
 			IF_END();
@@ -321,7 +321,10 @@ public class ParsSemanticAnal {
 		}
 	}
 	
-	private boolean semanticIf()
+	private void checkLogicalExpression(LexicalUnit l) throws Exception{
+		if(l != INTEGER)
+			throw new Exception("Expected logical expression after if.");
+	}
 
 	private void IF_END() throws Exception {
 		switch(currentToken.unit){
