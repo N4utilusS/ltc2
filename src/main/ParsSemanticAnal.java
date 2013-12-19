@@ -320,6 +320,8 @@ public class ParsSemanticAnal {
 		default: syntax_error("Missing: IF"); break;
 		}
 	}
+	
+	private boolean semanticIf()
 
 	private void IF_END() throws Exception {
 		switch(currentToken.unit){
@@ -526,13 +528,13 @@ public class ParsSemanticAnal {
 		return l;
 	}
 
-	private void TERM_REC(LexicalUnit l) throws Exception {
+	private LexicalUnit TERM_REC(LexicalUnit l) throws Exception {
 		switch(currentToken.unit){
 		case ASTERISK :
 		case SLASH:
-			MUL_DIV();
-			FACTOR();
-			TERM_REC();
+			Operator o = MUL_DIV();
+			LexicalUnit lu1 = FACTOR();
+			l = TERM_REC(resultType(lu1, o, l));
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -553,18 +555,23 @@ public class ParsSemanticAnal {
 			break;
 		default: syntax_error("Missing: ASTERISK or SLASH or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or AND or RIGHT_PARENTHESIS or MINUS_SIGN or PLUS_SIGN or LOWER_THAN or GREATER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN or THEN or FROM"); break;
 		}
+		return l;
 	}
 
-	private void MUL_DIV() throws Exception {
+	private Operator MUL_DIV() throws Exception {
+		Operator o = null;
 		switch(currentToken.unit){
 		case ASTERISK : 
 			match(ASTERISK);
+			o = Operator.MULTIPLY;
 			break;
 		case SLASH : 
 			match(SLASH);
+			o = Operator.DIVIDE;
 			break;
 		default: syntax_error("Missing: ASTERISK or SLASH"); break;
 		}
+		return o;
 	}
 
 	private LexicalUnit FACTOR() throws Exception {
@@ -598,7 +605,7 @@ public class ParsSemanticAnal {
 		switch(currentToken.unit){
 		case LEFT_PARENTHESIS:
 			match(LEFT_PARENTHESIS);
-			lu = EXPRESSION();
+			l = EXPRESSION();
 			match(RIGHT_PARENTHESIS);
 			break;
 		case IDENTIFIER:
@@ -606,23 +613,23 @@ public class ParsSemanticAnal {
 			// Check if declared variable.
 			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			lu = previousToken.unit;
+			l = previousToken.unit;
 			break;
 		case INTEGER:
 			match(INTEGER);
-			lu = INTEGER;
+			l = INTEGER;
 			break;
 		case TRUE:
 			match(TRUE);
-			lu = INTEGER;
+			l = INTEGER;
 			break;
 		case FALSE:
 			match(FALSE);
-			lu = INTEGER;
+			l = INTEGER;
 			break;
 		default: syntax_error("Missing: LEFT_PARENTHESIS or IDENTIFIER or INTEGER or TRUE or FALSE"); break;
 		}
-		return lu;
+		return l;
 	}
 
 	private LexicalUnit VALUE_REC(LexicalUnit l) throws Exception {
@@ -654,16 +661,20 @@ public class ParsSemanticAnal {
 		return l;
 	}
 
-	private void PLUS_MINUS() throws Exception {
+	private Operator PLUS_MINUS() throws Exception {
+		Operator o = null;
 		switch(currentToken.unit){
-		case MINUS_SIGN : 
+		case MINUS_SIGN :
 			match(MINUS_SIGN);
+			o = Operator.MINUS;
 			break;
-		case PLUS_SIGN : 
+		case PLUS_SIGN :
 			match(PLUS_SIGN);
+			o = Operator.PLUS;
 			break;
 		default: syntax_error("Missing: MINUS_SIGN or PLUS_SIGN"); break;
 		}
+		return o;
 	}
 
 	private void LABEL() throws Exception {
@@ -699,7 +710,7 @@ public class ParsSemanticAnal {
 	}
 
 	private void semantic_error(String message) throws Exception {
-		throw new Exception("LINE:" + currentToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
+		throw new Exception("LINE:" + previousToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
 	}
 
 	private LexicalUnit resultType(LexicalUnit lu1, Operator op, LexicalUnit lu2) throws Exception {
