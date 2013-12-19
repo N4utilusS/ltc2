@@ -455,19 +455,21 @@ public class ParsSemanticAnal {
 	}
 
 	private LexicalUnit SUBCONDITION() throws Exception {
-		VALUE();
-		SUBCON_FACT();
+		LexicalUnit l = VALUE();
+		l = SUBCON_FACT(l);
+		return l;
 	}
 
-	private void SUBCON_FACT() throws Exception {
+	private LexicalUnit SUBCON_FACT(LexicalUnit l) throws Exception {
 		switch(currentToken.unit){
 		case LOWER_THAN : 
 		case GREATER_THAN:
 		case LOWER_OR_EQUALS:
 		case GREATER_OR_EQUALS:
 		case EQUALS_SIGN:
-			COMP_OP();
-			VALUE();
+			Operator o = COMP_OP();
+			LexicalUnit lu1 = VALUE();
+			l = resultType(l, o, lu1);
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -481,27 +483,35 @@ public class ParsSemanticAnal {
 			break;
 		default: syntax_error("Missing: LOWER_THAN or GREATER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or AND or RIGHT_PARENTHESIS or THEN or FROM"); break;
 		}
+		return l;
 	}
 
-	private void COMP_OP() throws Exception {
+	private Operator COMP_OP() throws Exception {
+		Operator o = null;
 		switch(currentToken.unit){
-		case GREATER_THAN : 
+		case GREATER_THAN :
 			match(GREATER_THAN);
+			o = Operator.GREATER_THAN;
 			break;
 		case LOWER_THAN : 
 			match(LOWER_THAN);
+			o = Operator.LOWER_THAN;
 			break;
 		case LOWER_OR_EQUALS:
 			match(LOWER_OR_EQUALS);
+			o = Operator.LOWER_OR_EQUALS;
 			break;
 		case GREATER_OR_EQUALS:
 			match(GREATER_OR_EQUALS);
+			o = Operator.GREATER_OR_EQUALS;
 			break;
 		case EQUALS_SIGN:
 			match(EQUALS_SIGN);
+			o = Operator.EQUALS;
 			break;
 		default: syntax_error("Missing: GREATER_THAN or LOWER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN"); break;
 		}
+		return o;
 	}
 
 	private LexicalUnit VALUE() throws Exception {
@@ -510,12 +520,13 @@ public class ParsSemanticAnal {
 		return l;
 	}
 
-	private void TERM() throws Exception {
-		FACTOR();
-		TERM_REC();
+	private LexicalUnit TERM() throws Exception {
+		LexicalUnit l = FACTOR();
+		l = TERM_REC(l);
+		return l;
 	}
 
-	private void TERM_REC() throws Exception {
+	private void TERM_REC(LexicalUnit l) throws Exception {
 		switch(currentToken.unit){
 		case ASTERISK :
 		case SLASH:
@@ -556,29 +567,33 @@ public class ParsSemanticAnal {
 		}
 	}
 
-	private void FACTOR() throws Exception {
+	private LexicalUnit FACTOR() throws Exception {
+		LexicalUnit l = null;
 		switch(currentToken.unit){
 		case NOT : 
 			match(NOT);
-			NUMBER();
+			l = NUMBER();
+			l = resultType(l, Operator.NOT, l);
 			break;
 		case MINUS_SIGN : 
 			match(MINUS_SIGN);
-			NUMBER();
+			l = NUMBER();
+			l = resultType(l, Operator.UN_MINUS, l);
 			break;
 		case IDENTIFIER:
 		case INTEGER:
 		case LEFT_PARENTHESIS:
 		case TRUE:
 		case FALSE:
-			NUMBER();
+			l = NUMBER();
 			break;			
 		default: syntax_error("Missing: NOT or MINUS_SIGN or IDENTIFIER or INTEGER or LEFT_PARENTHESIS or TRUE or FALSE"); break;
 		}
+		return l;
 	}
 
 	private LexicalUnit NUMBER() throws Exception {
-		LexicalUnit lu = null;
+		LexicalUnit l = null;
 
 		switch(currentToken.unit){
 		case LEFT_PARENTHESIS:
