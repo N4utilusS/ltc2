@@ -16,7 +16,7 @@ public class Parser {
 	private Symbol<String> previousToken;
 	private List<Symbol<String>> usedLabels;
 	private Map<String,Symbol<?>> tableOfSymbols;
-	private Image currentimage = null;
+	private Image currentImage = null;
 
 	public Parser(){
 		this.usedLabels = new ArrayList<Symbol<String>>();
@@ -107,6 +107,7 @@ public class Parser {
 		case INTEGER:
 			match(INTEGER);
 			l = INTEGER;
+			updateImage(this.previousToken.getValue());
 			break;
 		case REAL:
 			match(REAL);
@@ -115,6 +116,10 @@ public class Parser {
 		default: syntax_error("Missing: INTEGER or REAL"); break;
 		}
 		return l;
+	}
+
+	private void updateImage(String str) {
+		this.currentImage.digitBefore = (str.length() > this.currentImage.digitBefore) ? str.length() : this.currentImage.digitBefore;
 	}
 
 	private void LEVEL() throws Exception {
@@ -771,10 +776,10 @@ public class Parser {
 			throw new Exception("Type incompatibility for assignation on line " + previousToken.get(Symbol.LINE) + ": " + rec.getValue() + " and " + exp + " are not compatible." +
 					" Learn to code.");
 		}
-		else if (compLevel == SC){
+		else if (compLevel == SC){	// Cast may be needed.
 			// Check images:
 			
-		}
+		}	// No cast needed.
 		
 		
 	}
