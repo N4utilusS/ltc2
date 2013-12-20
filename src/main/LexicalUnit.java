@@ -68,7 +68,10 @@ public enum LexicalUnit{
 
 	public final int SYMBOL_ID;
 	private static LexicalUnit[][][] types;
-	private static LexicalUnit[][] assComTab;
+	private static int[][] assComTab;
+	static final int NC = 0;	// Not compatible
+	static final int SC = 1;	// Semi-compatible, cast may be needed
+	static final int C = 2;		// Fully compatible
 
 	private LexicalUnit(final int uniqueIdentifier){
 		SYMBOL_ID = uniqueIdentifier;
@@ -124,6 +127,7 @@ public enum LexicalUnit{
 	 * Returns the type of the combination of the 2 operands with the given operator.
 	 * If only one operand for the operator, repeat it in the second field.
 	 * We chose to implement it with an array in java, instead of a HashMap. The amount of memory used may be higher, but we thought the speed would increase.
+	 * We suppose the operators are commutative for the type.
 	 * 
 	 * @param lu1 operand 1 type
 	 * @param op Operator, @see Operator
@@ -137,9 +141,22 @@ public enum LexicalUnit{
 			int length = values().length;
 			Operator[] opTab = Operator.values();
 			types = new LexicalUnit[length][length][opTab.length];
-
-			for (int i = 0; i < opTab.length; ++i)	// Define the resulting type of operation on integers and between integers.
+			
+			// INTEGER (the combinations giving INTEGERs)
+			for (int i = 0; i < opTab.length; ++i){	// Define the resulting type of operations.
 				setResultingType(INTEGER, opTab[i], INTEGER, INTEGER);
+				if (i <= 7)
+					setResultingType(REAL, opTab[i], REAL, INTEGER);
+				if (i >= 1 && i <= 7)
+					setResultingType(REAL, opTab[i], INTEGER, INTEGER);
+			}
+			
+			// REAL
+			for (int i = 8; i < opTab.length; ++i){
+				if (i >= 9)
+					setResultingType(REAL, opTab[i], INTEGER, REAL);
+				setResultingType(REAL, opTab[i], REAL, REAL);
+			}
 		}
 		
 		LexicalUnit lu = null;
@@ -159,12 +176,24 @@ public enum LexicalUnit{
 		return lu;
 	}
 
-	public static void checkAssignationCompatibility(LexicalUnit rec, LexicalUnit exp) {
+	/**
+	 * Checks the variable type with the assigned expression type.
+	 * @param rec
+	 * @param exp
+	 * @return The level of compatibility.
+	 */
+	public static int checkAssignationCompatibility(LexicalUnit rec, LexicalUnit exp) {
 		if (assComTab == null){
 			int length = values().length;
-			assComTab = new LexicalUnit[length][length];
+			assComTab = new int[length][length];
 			
 			
+			assComTab[REAL.SYMBOL_ID-1][INTEGER.SYMBOL_ID-1] = SC;	// This is because of the images.
+			assComTab[INTEGER.SYMBOL_ID-1][REAL.SYMBOL_ID-1] = SC;	// "
+			assComTab[INTEGER.SYMBOL_ID-1][INTEGER.SYMBOL_ID-1] = SC;	// "
+			assComTab[REAL.SYMBOL_ID-1][REAL.SYMBOL_ID-1] = SC;	// "
 		}
+		
+		return (exp != null) ? assComTab[rec.SYMBOL_ID-1][exp.SYMBOL_ID-1] : C;
 	}
 }

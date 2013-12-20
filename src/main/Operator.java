@@ -1,7 +1,6 @@
 package main;
 
 public enum Operator {
-	UN_MINUS,
 	NOT,
 	EQUALS,
 	LOWER_THAN,
@@ -10,6 +9,7 @@ public enum Operator {
 	GREATER_OR_EQUALS,
 	AND,
 	OR,
+	UN_MINUS,
 	PLUS,
 	MINUS,
 	MULTIPLY,

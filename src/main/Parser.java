@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import static main.LexicalUnit.*;
 
-public class ParsSemanticAnal {
+public class Parser {
 
 	private Scanner cobolScanner;
 	private Symbol<String> currentToken;
@@ -18,7 +18,7 @@ public class ParsSemanticAnal {
 	private Map<String,Symbol<?>> tableOfSymbols;
 	private Image currentimage = null;
 
-	public ParsSemanticAnal(){
+	public Parser(){
 		this.usedLabels = new ArrayList<Symbol<String>>();
 		//this.cobolScanner = new Scanner(System.in);
 		try {
@@ -73,24 +73,30 @@ public class ParsSemanticAnal {
 	}
 
 	private void VAR_DECL() throws Exception {
+		LexicalUnit l = null;
+		Symbol<?> s = null;
+		
 		LEVEL();
-		match(IDENTIFIER);
+		match(IDENTIFIER); s = this.previousToken;
 		match(IMAGE);
-		VD_FACT();
+		l = VD_FACT();
+		checkAssignationCompatibility(s, l);
 	}
 
-	private void VD_FACT() throws Exception {
+	private LexicalUnit VD_FACT() throws Exception {
+		LexicalUnit l = null;
 		switch(currentToken.unit){
 		case END_OF_INSTRUCTION : 
 			END_INST();
 			break;
 		case VALUE :
 			match(VALUE);
-			VD_VALUE();
+			l = VD_VALUE();
 			END_INST();
 			break;
 		default: syntax_error("Missing: END_OF_INSTRUCTION or VALUE"); break;
 		}
+		return l;
 	}
 
 	private LexicalUnit VD_VALUE() throws Exception {
@@ -754,8 +760,17 @@ public class ParsSemanticAnal {
 	
 	private void checkAssignationCompatibility(Symbol<?> rec, LexicalUnit exp) throws Exception{
 		// Check basic compatibility:
-		LexicalUnit.checkAssignationCompatibility(rec.unit, exp);
+		int compLevel = LexicalUnit.checkAssignationCompatibility(rec.unit, exp);
 		
-		// Check images:
+		if (compLevel == NC){
+			throw new Exception("Type incompatibility for assignation on line " + previousToken.get(Symbol.LINE) + ": " + rec.getValue() + " and " + exp + " are not compatible." +
+					"Learn to code.");
+		}
+		else if (compLevel == SC){
+			// Check images:
+			
+		}
+		
+		
 	}
 }

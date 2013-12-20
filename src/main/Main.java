@@ -17,7 +17,7 @@ public class Main{
 		// Apply the lexical analyzer
 //		Scanner cobolScanner = new Scanner(System.in);
 		
-		ParsSemanticAnal parsSemanticAnal = new ParsSemanticAnal();
+		Parser parsSemanticAnal = new Parser();
 		
 //		Symbol lexicalUnit;
 //		do{
