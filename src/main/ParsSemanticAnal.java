@@ -93,6 +93,22 @@ public class ParsSemanticAnal {
 		}
 	}
 
+	private LexicalUnit VD_VALUE() throws Exception {
+		LexicalUnit l = null;
+		switch(currentToken.unit){
+		case INTEGER:
+			match(INTEGER);
+			l = INTEGER;
+			break;
+		case REAL:
+			match(REAL);
+			l = REAL;
+			break;
+		default: syntax_error("Missing: INTEGER or REAL"); break;
+		}
+		return l;
+	}
+
 	private void LEVEL() throws Exception {
 		match(INTEGER);
 	}
