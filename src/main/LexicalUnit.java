@@ -68,6 +68,7 @@ public enum LexicalUnit{
 
 	public final int SYMBOL_ID;
 	private static LexicalUnit[][][] types;
+	private static LexicalUnit[][] assComTab;
 
 	private LexicalUnit(final int uniqueIdentifier){
 		SYMBOL_ID = uniqueIdentifier;
@@ -122,6 +123,7 @@ public enum LexicalUnit{
 	/**
 	 * Returns the type of the combination of the 2 operands with the given operator.
 	 * If only one operand for the operator, repeat it in the second field.
+	 * We chose to implement it with an array in java, instead of a HashMap. The amount of memory used may be higher, but we thought the speed would increase.
 	 * 
 	 * @param lu1 operand 1 type
 	 * @param op Operator, @see Operator
@@ -155,5 +157,14 @@ public enum LexicalUnit{
 			lu = lu2;
 		
 		return lu;
+	}
+
+	public static void checkAssignationCompatibility(LexicalUnit rec, LexicalUnit exp) {
+		if (assComTab == null){
+			int length = values().length;
+			assComTab = new LexicalUnit[length][length];
+			
+			
+		}
 	}
 }

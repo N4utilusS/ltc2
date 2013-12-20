@@ -86,7 +86,7 @@ public class ParsSemanticAnal {
 			break;
 		case VALUE :
 			match(VALUE);
-			match(INTEGER);
+			VD_VALUE();
 			END_INST();
 			break;
 		default: syntax_error("Missing: END_OF_INSTRUCTION or VALUE"); break;
@@ -169,7 +169,7 @@ public class ParsSemanticAnal {
 		match(PROGRAM);
 		match(IDENTIFIER);
 		// Check with the saved id if the same:
-		if (!this.programID.equals(previousToken.getValue()))	// Si ça ne correspond pas.
+		if (!this.programID.equals(previousToken.getValue()))	// Si ï¿½a ne correspond pas.
 			this.semantic_error("ProgramID do not match: " + this.programID + " is not " + previousToken.getValue());
 		match(DOT);
 	}
@@ -737,8 +737,9 @@ public class ParsSemanticAnal {
 	}
 	
 	private void checkAssignationCompatibility(Symbol<?> rec, LexicalUnit exp) throws Exception{
-		LexicalUnit.checkAssignationCompatibility(rec, exp);
+		// Check basic compatibility:
+		LexicalUnit.checkAssignationCompatibility(rec.unit, exp);
 		
-		
+		// Check images:
 	}
 }
