@@ -374,9 +374,8 @@ public class Parser {
 			match(TO);
 			match(IDENTIFIER);
 			// Check if declared variable.
-			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			s = this.previousToken;
 			checkAssignationCompatibility(s, l);
 			END_INST();
 			break;
@@ -384,9 +383,8 @@ public class Parser {
 			match(COMPUTE);
 			match(IDENTIFIER);
 			// Check if declared variable.
-			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			s = this.previousToken;
 			match(EQUALS_SIGN);
 			l = EXPRESSION();
 			checkAssignationCompatibility(s, l);
@@ -398,9 +396,9 @@ public class Parser {
 			match(TO);
 			match(IDENTIFIER);
 			// Check if declared variable.
-			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			s = this.previousToken;
+			l = resultType((LexicalUnit) s.get(Symbol.TYPE), Operator.PLUS, l);
 			checkAssignationCompatibility(s, l);
 			END_INST();
 			break;
@@ -410,34 +408,38 @@ public class Parser {
 			match(FROM);
 			match(IDENTIFIER);
 			// Check if declared variable.
-			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			s = this.previousToken;
+			l = resultType((LexicalUnit) s.get(Symbol.TYPE), Operator.MINUS, l);
 			checkAssignationCompatibility(s, l);
 			END_INST();
 			break;
 		case MULTIPLY:
 			match(MULTIPLY);
-			ASSING_END();
+			ASSING_END(Operator.MULTIPLY);
 			END_INST();
 			break;
 		case DIVIDE:
 			match(DIVIDE);
-			ASSING_END();
-			END_INST();	
+			ASSING_END(Operator.DIVIDE);
+			END_INST();
 		default: syntax_error("Missing: MOVE or COMPUTE or ADD or SUBTRACT or MULTIPLY or DIVIDE"); break;
 		}
 	}
 
-	private void ASSING_END() throws Exception {
-		EXPRESSION();
+	private void ASSING_END(Operator o) throws Exception {
+		LexicalUnit lu1, lu2, l;
+		Symbol<?> s;
+		lu1 = EXPRESSION();
 		match(COMMA);
-		EXPRESSION();
+		lu2 = EXPRESSION();
 		match(GIVING);
 		match(IDENTIFIER);
 		// Check if declared variable.
-		if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+		if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
+		l = resultType(lu1, o, lu2);
+		checkAssignationCompatibility(s, l);
 	}
 
 	private LexicalUnit EXPRESSION() throws Exception {
