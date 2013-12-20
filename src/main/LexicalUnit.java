@@ -193,7 +193,9 @@ public enum LexicalUnit{
 			assComTab[INTEGER.SYMBOL_ID-1][INTEGER.SYMBOL_ID-1] = SC;	// "
 			assComTab[REAL.SYMBOL_ID-1][REAL.SYMBOL_ID-1] = SC;	// "
 		}
+		System.out.println("---------- The type: " + rec);
 		
 		return (exp != null) ? assComTab[rec.SYMBOL_ID-1][exp.SYMBOL_ID-1] : C;
 	}
+
 }

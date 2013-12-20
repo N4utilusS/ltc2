@@ -73,12 +73,14 @@ public class Parser {
 	}
 
 	private void VAR_DECL() throws Exception {
-		LexicalUnit l = null;
+		LexicalUnit l, lu1 = null;
 		Symbol<?> s = null;
 		
 		LEVEL();
 		match(IDENTIFIER); s = this.previousToken;
 		match(IMAGE);
+		// Use the image to give a type to the symbol:
+		s.setLexicalUnitWithImage();
 		l = VD_FACT();
 		checkAssignationCompatibility(s, l);
 	}
@@ -301,7 +303,7 @@ public class Parser {
 	private void READ() throws Exception {
 		match(ACCEPT);
 		match(IDENTIFIER);
-		// Check if declared variable.
+		// Check if declared variable. TODO Check for the type of the id in code gen ?
 		if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 		END_INST();
@@ -646,9 +648,10 @@ public class Parser {
 		case IDENTIFIER:
 			match(IDENTIFIER);
 			// Check if declared variable.
-			if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+			Symbol<?> s;
+			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			l = previousToken.unit;
+			l = (LexicalUnit) s.get(Symbol.TYPE);
 			break;
 		case INTEGER:
 			match(INTEGER);
@@ -753,18 +756,18 @@ public class Parser {
 		
 		if (l == null)	// null means no existing compatibility.
 			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + lu1 + " and " + lu2 + " are not compatible." +
-					"Learn to code.");
+					" Learn to code.");
 		
 		return l;
 	}
 	
 	private void checkAssignationCompatibility(Symbol<?> rec, LexicalUnit exp) throws Exception{
 		// Check basic compatibility:
-		int compLevel = LexicalUnit.checkAssignationCompatibility(rec.unit, exp);
+		int compLevel = LexicalUnit.checkAssignationCompatibility((LexicalUnit) rec.get(Symbol.TYPE), exp);
 		
 		if (compLevel == NC){
 			throw new Exception("Type incompatibility for assignation on line " + previousToken.get(Symbol.LINE) + ": " + rec.getValue() + " and " + exp + " are not compatible." +
-					"Learn to code.");
+					" Learn to code.");
 		}
 		else if (compLevel == SC){
 			// Check images:

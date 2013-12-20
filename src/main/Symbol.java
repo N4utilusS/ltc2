@@ -4,15 +4,15 @@ import java.util.HashMap;
 
 public class Symbol<ValueType> extends HashMap<String,Object>{
 	public static final String
-		LINE		= "LINE",
-		COLUMN	= "COLUMN",
-		CONTENT	= "CONTENT",
-		IMAGE		= "IMAGE",
-		TYPE = "TYPE";
-		
+	LINE		= "LINE",
+	COLUMN	= "COLUMN",
+	CONTENT	= "CONTENT",
+	IMAGE		= "IMAGE",
+	TYPE = "TYPE";
+
 	private ValueType value;
 	public final LexicalUnit unit;
-	
+
 	public Symbol(final LexicalUnit typeOfUnit){
 		this.unit = typeOfUnit;
 	}
@@ -22,7 +22,7 @@ public class Symbol<ValueType> extends HashMap<String,Object>{
 	public void setValue(ValueType value){
 		this.value = value;
 	}
-	
+
 	public boolean equals(Object obj){
 		if (obj == this)
 			return true;
@@ -33,5 +33,16 @@ public class Symbol<ValueType> extends HashMap<String,Object>{
 				return(super.equals(s) && this.value.equals(s.value) && this.unit == s.unit);
 			}
 		return false;
+	}
+	
+	public void setLexicalUnitWithImage() {
+		LexicalUnit l = LexicalUnit.INTEGER;
+		String image = (String) this.get(IMAGE);
+		System.out.println("--------------- The string is: " + image);
+		
+		if (image.matches("s?9(\\([1-9][0-9]*\\))?v9(\\([1-9][0-9]*\\))?"))
+			l = LexicalUnit.REAL;
+		
+		this.put(TYPE, l);
 	}
 }
