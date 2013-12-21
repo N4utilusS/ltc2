@@ -35,14 +35,17 @@ public class Symbol<ValueType> extends HashMap<String,Object>{
 		return false;
 	}
 	
-	public void setLexicalUnitWithImage() {
+	public void setTypeWithImage() {
 		LexicalUnit l = LexicalUnit.INTEGER;
+		Type t = new Type();
 		String image = (String) this.get(IMAGE);
 		System.out.println("--------------- The string is: " + image);
 		
 		if (image.matches("s?9(\\([1-9][0-9]*\\))?v9(\\([1-9][0-9]*\\))?"))
 			l = LexicalUnit.REAL;
+		t.l = l;
+		t.updateImageWithImage(image);
 		
-		this.put(TYPE, l);
+		this.put(TYPE, t);
 	}
 }

@@ -72,32 +72,32 @@ public class Parser {
 	}
 
 	private void VAR_DECL() throws Exception {
-		LexicalUnit l, lu1 = null;
+		Type t = null;
 		Symbol<?> s = null;
 
 		LEVEL();
 		match(IDENTIFIER); s = this.previousToken;
 		match(IMAGE);
 		// Use the image to give a type to the symbol:
-		s.setLexicalUnitWithImage();
-		l = VD_FACT();
-		checkAssignationCompatibility(s, l);
+		s.setTypeWithImage();
+		t = VD_FACT();
+		checkAssignationCompatibility(s, t);
 	}
 
-	private LexicalUnit VD_FACT() throws Exception {
-		LexicalUnit l = null;
+	private Type VD_FACT() throws Exception {
+		Type t = null;
 		switch(currentToken.unit){
 		case END_OF_INSTRUCTION : 
 			END_INST();
 			break;
 		case VALUE :
 			match(VALUE);
-			l = VD_VALUE();
+			t = VD_VALUE();
 			END_INST();
 			break;
 		default: syntax_error("Missing: END_OF_INSTRUCTION or VALUE"); break;
 		}
-		return l;
+		return t;
 	}
 
 	private Type VD_VALUE() throws Exception {
@@ -366,18 +366,18 @@ public class Parser {
 	}
 
 	private void ASSIGNATION() throws Exception {
-		LexicalUnit l = null;
+		Type t = null;
 		Symbol<?> s = null;
 		switch(currentToken.unit){
 		case MOVE : 
 			match(MOVE);
-			l = EXPRESSION();
+			t = EXPRESSION();
 			match(TO);
 			match(IDENTIFIER);
 			// Check if declared variable.
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			checkAssignationCompatibility(s, l);
+			checkAssignationCompatibility(s, t);
 			END_INST();
 			break;
 		case COMPUTE :
@@ -387,20 +387,20 @@ public class Parser {
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			match(EQUALS_SIGN);
-			l = EXPRESSION();
-			checkAssignationCompatibility(s, l);
+			t = EXPRESSION();
+			checkAssignationCompatibility(s, t);
 			END_INST();
 			break;
 		case ADD:
 			match(ADD);
-			l = EXPRESSION();
+			t = EXPRESSION();
 			match(TO);
 			match(IDENTIFIER);
 			// Check if declared variable.
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			l = resultType((LexicalUnit) s.get(Symbol.TYPE), Operator.PLUS, l);
-			checkAssignationCompatibility(s, l);
+			t = resultType((LexicalUnit) s.get(Symbol.TYPE), Operator.PLUS, t);
+			checkAssignationCompatibility(s, t);
 			END_INST();
 			break;
 		case SUBTRACT:
@@ -691,7 +691,7 @@ public class Parser {
 			Operator o = PLUS_MINUS();
 			LexicalUnit lu1 = TERM();
 			l = VALUE_REC(resultType(l, o, lu1));
-			
+
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -765,7 +765,7 @@ public class Parser {
 		throw new Exception("LINE:" + previousToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
 	}
 
-	private LexicalUnit resultType(LexicalUnit lu1, Operator op, LexicalUnit lu2) throws Exception {
+	private LexicalUnit resultType(Type lu1, Operator op, LexicalUnit lu2) throws Exception {
 		LexicalUnit l = LexicalUnit.resultType(lu1, op, lu2);
 
 		if (l == null)	// null means no existing compatibility.
@@ -775,9 +775,9 @@ public class Parser {
 		return l;
 	}
 
-	private void checkAssignationCompatibility(Symbol<?> rec, LexicalUnit exp) throws Exception{
+	private void checkAssignationCompatibility(Symbol<?> rec, Type exp) throws Exception{
 		// Check basic compatibility:
-		int compLevel = LexicalUnit.checkAssignationCompatibility((LexicalUnit) rec.get(Symbol.TYPE), exp);
+		int compLevel = LexicalUnit.checkAssignationCompatibility((LexicalUnit) rec.get(Symbol.TYPE), exp.l);
 
 		if (compLevel == NC){
 			throw new Exception("Type incompatibility for assignation on line " + previousToken.get(Symbol.LINE) + ": " + rec.getValue() + " and " + exp + " are not compatible." +
@@ -786,37 +786,18 @@ public class Parser {
 		else if (compLevel == SC){	// Cast may be needed.
 			// Check images:
 
-			String image = (String) rec.get(Symbol.IMAGE);
-			if (this.currentImage.signed && image.charAt(0) != 's')
+			Type recType = (Type) rec.get(Symbol.TYPE);
+			if (exp.image.signed && !recType.image.signed)
 				System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The unsigned variable cannot be assigned a signed expression.");
 
+			if (exp.image.digitBefore > recType.image.digitBefore)
+				System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The integer part of the expression may be truncated (smaller image).");
 
-			if (image.contains("v")){
-				String imageBefore = image.substring(0, image.indexOf('v'));
-
-				int digitBefore = (imageBefore.contains("(")) ? Integer.parseInt(imageBefore.substring(imageBefore.indexOf('(') + 1, imageBefore.indexOf(')'))) : 1;
-
-				if (this.currentImage.digitBefore > digitBefore)
-					System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The integer part of the expression may be truncated (smaller image).");
-
-				String imageAfter = image.substring(image.indexOf('v') + 1);
-
-				int digitAfter = (imageAfter.contains("(")) ? Integer.parseInt(imageAfter.substring(imageAfter.indexOf('(') + 1, imageAfter.indexOf(')'))) : 1;
-
-				if (this.currentImage.digitAfter > digitAfter)
-					System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The decimal part of the expression may be truncated (smaller image).");
-
-			}
-			else{
-				int digitBefore = (image.contains("(")) ? Integer.parseInt(image.substring(image.indexOf('(') + 1, image.indexOf(')'))) : 1;
-
-				if (this.currentImage.digitBefore > digitBefore)
-					System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The integer part of the expression may be truncated (smaller image).");
-			}
+			if (exp.image.digitAfter > recType.image.digitAfter)
+				System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The decimal part of the expression may be truncated (smaller image).");
 
 
 		}	// No cast needed.
 
-		this.currentImage = null;
 	}
 }
