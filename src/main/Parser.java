@@ -16,7 +16,6 @@ public class Parser {
 	private Symbol<String> previousToken;
 	private List<Symbol<String>> usedLabels;
 	private Map<String,Symbol<?>> tableOfSymbols;
-	private Image currentImage = null;
 
 	public Parser(){
 		this.usedLabels = new ArrayList<Symbol<String>>();
@@ -75,7 +74,7 @@ public class Parser {
 	private void VAR_DECL() throws Exception {
 		LexicalUnit l, lu1 = null;
 		Symbol<?> s = null;
-		
+
 		LEVEL();
 		match(IDENTIFIER); s = this.previousToken;
 		match(IMAGE);
@@ -101,25 +100,22 @@ public class Parser {
 		return l;
 	}
 
-	private LexicalUnit VD_VALUE() throws Exception {
-		LexicalUnit l = null;
+	private Type VD_VALUE() throws Exception {
+		Type t = new Type();
 		switch(currentToken.unit){
 		case INTEGER:
 			match(INTEGER);
-			l = INTEGER;
-			updateImage(this.previousToken.getValue());
+			t.l = INTEGER;
+			t.updateImage(this.previousToken.getValue());
 			break;
 		case REAL:
 			match(REAL);
-			l = REAL;
+			t.l = REAL;
+			t.updateImage(this.previousToken.getValue());
 			break;
 		default: syntax_error("Missing: INTEGER or REAL"); break;
 		}
-		return l;
-	}
-
-	private void updateImage(String str) {
-		this.currentImage.digitBefore = (str.length() > this.currentImage.digitBefore) ? str.length() : this.currentImage.digitBefore;
+		return t;
 	}
 
 	private void LEVEL() throws Exception {
@@ -327,7 +323,7 @@ public class Parser {
 		switch(currentToken.unit){
 		case UNTIL : 
 			match(UNTIL);
-			LexicalUnit l = EXPRESSION(); checkLogicalExpression(l);
+			Type t = EXPRESSION(); checkLogicalExpression(t);
 			END_INST();
 			break;
 		case END_OF_INSTRUCTION:
@@ -341,7 +337,7 @@ public class Parser {
 		switch(currentToken.unit){
 		case IF : 
 			match(IF);
-			LexicalUnit l = EXPRESSION(); checkLogicalExpression(l);
+			Type t = EXPRESSION(); checkLogicalExpression(l);
 			match(THEN);
 			INSTRUCTION_LIST();
 			IF_END();
@@ -349,9 +345,9 @@ public class Parser {
 		default: syntax_error("Missing: IF"); break;
 		}
 	}
-	
-	private void checkLogicalExpression(LexicalUnit l) throws Exception{
-		if(l != INTEGER)
+
+	private void checkLogicalExpression(Type t) throws Exception{
+		if(t.l != INTEGER && t.l != REAL)
 			throw new Exception("Expected logical expression after if. Learn to code.");
 	}
 
@@ -460,7 +456,7 @@ public class Parser {
 			LexicalUnit lu1 = CONDITION();
 			l = EXPRESSION_REC(resultType(l, Operator.OR, lu1));
 			break;
-		case END_OF_INSTRUCTION : 
+		case END_OF_INSTRUCTION :
 		case TO:
 		case GIVING:
 		case COMMA:
@@ -659,10 +655,20 @@ public class Parser {
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			l = (LexicalUnit) s.get(Symbol.TYPE);
+			// Update the image:
+			l.updateImageWithImage((String) s.get(Symbol.IMAGE));
 			break;
 		case INTEGER:
 			match(INTEGER);
 			l = INTEGER;
+			// Update the image:
+			updateImage();
+			break;
+		case REAL:
+			match(REAL);
+			l = REAL;
+			// Update the image:
+			updateImage();
 			break;
 		case TRUE:
 			match(TRUE);
@@ -678,13 +684,14 @@ public class Parser {
 	}
 
 	private LexicalUnit VALUE_REC(LexicalUnit l) throws Exception {
-		
+
 		switch(currentToken.unit){
 		case PLUS_SIGN :
 		case MINUS_SIGN:
 			Operator o = PLUS_MINUS();
 			LexicalUnit lu1 = TERM();
 			l = VALUE_REC(resultType(l, o, lu1));
+			
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -760,27 +767,56 @@ public class Parser {
 
 	private LexicalUnit resultType(LexicalUnit lu1, Operator op, LexicalUnit lu2) throws Exception {
 		LexicalUnit l = LexicalUnit.resultType(lu1, op, lu2);
-		
+
 		if (l == null)	// null means no existing compatibility.
 			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + lu1 + " and " + lu2 + " are not compatible." +
 					" Learn to code.");
-		
+
 		return l;
 	}
-	
+
 	private void checkAssignationCompatibility(Symbol<?> rec, LexicalUnit exp) throws Exception{
 		// Check basic compatibility:
 		int compLevel = LexicalUnit.checkAssignationCompatibility((LexicalUnit) rec.get(Symbol.TYPE), exp);
-		
+
 		if (compLevel == NC){
 			throw new Exception("Type incompatibility for assignation on line " + previousToken.get(Symbol.LINE) + ": " + rec.getValue() + " and " + exp + " are not compatible." +
 					" Learn to code.");
 		}
 		else if (compLevel == SC){	// Cast may be needed.
 			// Check images:
-			
+
+			String image = (String) rec.get(Symbol.IMAGE);
+			if (this.currentImage.signed && image.charAt(0) != 's')
+				System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The unsigned variable cannot be assigned a signed expression.");
+
+
+			if (image.contains("v")){
+				String imageBefore = image.substring(0, image.indexOf('v'));
+
+				int digitBefore = (imageBefore.contains("(")) ? Integer.parseInt(imageBefore.substring(imageBefore.indexOf('(') + 1, imageBefore.indexOf(')'))) : 1;
+
+				if (this.currentImage.digitBefore > digitBefore)
+					System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The integer part of the expression may be truncated (smaller image).");
+
+				String imageAfter = image.substring(image.indexOf('v') + 1);
+
+				int digitAfter = (imageAfter.contains("(")) ? Integer.parseInt(imageAfter.substring(imageAfter.indexOf('(') + 1, imageAfter.indexOf(')'))) : 1;
+
+				if (this.currentImage.digitAfter > digitAfter)
+					System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The decimal part of the expression may be truncated (smaller image).");
+
+			}
+			else{
+				int digitBefore = (image.contains("(")) ? Integer.parseInt(image.substring(image.indexOf('(') + 1, image.indexOf(')'))) : 1;
+
+				if (this.currentImage.digitBefore > digitBefore)
+					System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The integer part of the expression may be truncated (smaller image).");
+			}
+
+
 		}	// No cast needed.
-		
-		
+
+		this.currentImage = null;
 	}
 }

@@ -197,5 +197,6 @@ public enum LexicalUnit{
 		
 		return (exp != null) ? assComTab[rec.SYMBOL_ID-1][exp.SYMBOL_ID-1] : C;
 	}
+	
 
 }
