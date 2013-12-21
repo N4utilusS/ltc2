@@ -574,7 +574,7 @@ public class Parser {
 		case SLASH:
 			Operator o = MUL_DIV();
 			LexicalUnit lu1 = FACTOR();
-			l = TERM_REC(resultType(lu1, o, l));
+			l = TERM_REC(resultType(l, o, lu1));
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -765,14 +765,51 @@ public class Parser {
 		throw new Exception("LINE:" + previousToken.get(Symbol.LINE) + "\n" + message + "\n" + "before: " + currentToken.getValue() + "\n");
 	}
 
-	private LexicalUnit resultType(Type lu1, Operator op, LexicalUnit lu2) throws Exception {
-		LexicalUnit l = LexicalUnit.resultType(lu1, op, lu2);
+	private Type resultType(Type t1, Operator op, Type t2) throws Exception {
+		LexicalUnit l = LexicalUnit.resultType(t1.l, op, t2.l);
 
 		if (l == null)	// null means no existing compatibility.
-			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + lu1 + " and " + lu2 + " are not compatible." +
+			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + t1.l + " and " + t2.l + " are not compatible." +
 					" Learn to code.");
-
-		return l;
+		
+		Type t = new Type();
+		t.l = l;
+		
+		switch (op){
+		case NOT:
+		case AND:
+		case OR:
+		case LOWER_THAN : 
+		case GREATER_THAN:
+		case LOWER_OR_EQUALS:
+		case GREATER_OR_EQUALS:
+		case EQUALS:
+			t.image.digitBefore = 1;
+			break;
+		case PLUS:
+			t.image.digitBefore = Math.max(t1.image.digitBefore, t2.image.digitBefore) + 1;
+			t.image.digitAfter = Math.max(t1.image.digitAfter, t2.image.digitAfter);
+			t.image.signed = t1.image.signed || t2.image.signed;
+			break;
+		case MINUS:
+			t.image.digitBefore = Math.max(t1.image.digitBefore, t2.image.digitBefore) + 1;
+			t.image.digitAfter = Math.max(t1.image.digitAfter, t2.image.digitAfter);
+			t.image.signed = true;
+			break;
+		case MULTIPLY:
+			t.image.digitBefore = t1.image.digitBefore + t2.image.digitBefore;
+			t.image.digitAfter = t1.image.digitAfter + t2.image.digitAfter;
+			t.image.signed = t1.image.signed || t2.image.signed;
+			break;
+		case DIVIDE:
+			t.image.digitBefore = t1.image.digitBefore + t2.image.digitAfter;
+			t.image.digitAfter = t2.image.digitBefore + t1.image.digitAfter;
+			t.image.signed = t1.image.signed || t2.image.signed;
+			break;
+		}
+		
+		
+		return t;
 	}
 
 	private void checkAssignationCompatibility(Symbol<?> rec, Type exp) throws Exception{
