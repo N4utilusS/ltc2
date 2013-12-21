@@ -36,7 +36,7 @@ public class Parser {
 			e.printStackTrace();
 			//System.out.println("PROBLEME: " + e.getMessage());
 		} catch (Exception e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 			System.out.println(e.getMessage());
 		}
 	}
@@ -337,7 +337,7 @@ public class Parser {
 		switch(currentToken.unit){
 		case IF : 
 			match(IF);
-			Type t = EXPRESSION(); checkLogicalExpression(l);
+			Type t = EXPRESSION(); checkLogicalExpression(t);
 			match(THEN);
 			INSTRUCTION_LIST();
 			IF_END();
@@ -399,20 +399,20 @@ public class Parser {
 			// Check if declared variable.
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			t = resultType((LexicalUnit) s.get(Symbol.TYPE), Operator.PLUS, t);
+			t = resultType((Type) s.get(Symbol.TYPE), Operator.PLUS, t);
 			checkAssignationCompatibility(s, t);
 			END_INST();
 			break;
 		case SUBTRACT:
 			match(SUBTRACT);
-			l = EXPRESSION();
+			t = EXPRESSION();
 			match(FROM);
 			match(IDENTIFIER);
 			// Check if declared variable.
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			l = resultType((LexicalUnit) s.get(Symbol.TYPE), Operator.MINUS, l);
-			checkAssignationCompatibility(s, l);
+			t = resultType((Type) s.get(Symbol.TYPE), Operator.MINUS, t);
+			checkAssignationCompatibility(s, t);
 			END_INST();
 			break;
 		case MULTIPLY:
@@ -429,32 +429,32 @@ public class Parser {
 	}
 
 	private void ASSING_END(Operator o) throws Exception {
-		LexicalUnit lu1, lu2, l;
+		Type t1, t2, t;
 		Symbol<?> s;
-		lu1 = EXPRESSION();
+		t1 = EXPRESSION();
 		match(COMMA);
-		lu2 = EXPRESSION();
+		t2 = EXPRESSION();
 		match(GIVING);
 		match(IDENTIFIER);
 		// Check if declared variable.
 		if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-		l = resultType(lu1, o, lu2);
-		checkAssignationCompatibility(s, l);
+		t = resultType(t1, o, t2);
+		checkAssignationCompatibility(s, t);
 	}
 
-	private LexicalUnit EXPRESSION() throws Exception {
-		LexicalUnit l = CONDITION();
-		l = EXPRESSION_REC(l);
-		return l;
+	private Type EXPRESSION() throws Exception {
+		Type t = CONDITION();
+		t = EXPRESSION_REC(t);
+		return t;
 	}
 
-	private LexicalUnit EXPRESSION_REC(LexicalUnit l) throws Exception {
+	private Type EXPRESSION_REC(Type t) throws Exception {
 		switch(currentToken.unit){
 		case OR :
 			match(OR);
-			LexicalUnit lu1 = CONDITION();
-			l = EXPRESSION_REC(resultType(l, Operator.OR, lu1));
+			Type t1 = CONDITION();
+			t = EXPRESSION_REC(resultType(t, Operator.OR, t1));
 			break;
 		case END_OF_INSTRUCTION :
 		case TO:
@@ -466,21 +466,21 @@ public class Parser {
 			break;
 		default: syntax_error("Missing: OR or END_OF_INSTRUCTION or TO or GIVING or COMMA or RIGHT_PARENTHESIS or THEN or FROM"); break;
 		}
-		return l;
+		return t;
 	}
 
-	private LexicalUnit CONDITION() throws Exception {
-		LexicalUnit l = SUBCONDITION();
-		l = CONDITION_REC(l);
-		return l;
+	private Type CONDITION() throws Exception {
+		Type t = SUBCONDITION();
+		t = CONDITION_REC(t);
+		return t;
 	}
 
-	private LexicalUnit CONDITION_REC(LexicalUnit l) throws Exception {
+	private Type CONDITION_REC(Type t) throws Exception {
 		switch(currentToken.unit){
 		case AND : 
 			match(AND);
-			LexicalUnit lu1 = SUBCONDITION();
-			l = CONDITION_REC(resultType(l, Operator.AND, lu1));
+			Type t1 = SUBCONDITION();
+			t = CONDITION_REC(resultType(t, Operator.AND, t1));
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -493,16 +493,16 @@ public class Parser {
 			break;
 		default: syntax_error("Missing: AND or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or RIGHT_PARENTHESIS or THEN or FROM"); break;
 		}
-		return l;
+		return t;
 	}
 
-	private LexicalUnit SUBCONDITION() throws Exception {
-		LexicalUnit l = VALUE();
-		l = SUBCON_FACT(l);
-		return l;
+	private Type SUBCONDITION() throws Exception {
+		Type t = VALUE();
+		t = SUBCON_FACT(t);
+		return t;
 	}
 
-	private LexicalUnit SUBCON_FACT(LexicalUnit l) throws Exception {
+	private Type SUBCON_FACT(Type t) throws Exception {
 		switch(currentToken.unit){
 		case LOWER_THAN : 
 		case GREATER_THAN:
@@ -510,8 +510,8 @@ public class Parser {
 		case GREATER_OR_EQUALS:
 		case EQUALS_SIGN:
 			Operator o = COMP_OP();
-			LexicalUnit lu1 = VALUE();
-			l = resultType(l, o, lu1);
+			Type t1 = VALUE();
+			t = resultType(t, o, t1);
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -525,7 +525,7 @@ public class Parser {
 			break;
 		default: syntax_error("Missing: LOWER_THAN or GREATER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or AND or RIGHT_PARENTHESIS or THEN or FROM"); break;
 		}
-		return l;
+		return t;
 	}
 
 	private Operator COMP_OP() throws Exception {
@@ -556,25 +556,25 @@ public class Parser {
 		return o;
 	}
 
-	private LexicalUnit VALUE() throws Exception {
-		LexicalUnit l = TERM();
-		l = VALUE_REC(l);
-		return l;
+	private Type VALUE() throws Exception {
+		Type t = TERM();
+		t = VALUE_REC(t);
+		return t;
 	}
 
-	private LexicalUnit TERM() throws Exception {
-		LexicalUnit l = FACTOR();
-		l = TERM_REC(l);
-		return l;
+	private Type TERM() throws Exception {
+		Type t = FACTOR();
+		t = TERM_REC(t);
+		return t;
 	}
 
-	private LexicalUnit TERM_REC(LexicalUnit l) throws Exception {
+	private Type TERM_REC(Type t) throws Exception {
 		switch(currentToken.unit){
 		case ASTERISK :
 		case SLASH:
 			Operator o = MUL_DIV();
-			LexicalUnit lu1 = FACTOR();
-			l = TERM_REC(resultType(l, o, lu1));
+			Type t1 = FACTOR();
+			t = TERM_REC(resultType(t, o, t1));
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -595,7 +595,7 @@ public class Parser {
 			break;
 		default: syntax_error("Missing: ASTERISK or SLASH or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or AND or RIGHT_PARENTHESIS or MINUS_SIGN or PLUS_SIGN or LOWER_THAN or GREATER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN or THEN or FROM"); break;
 		}
-		return l;
+		return t;
 	}
 
 	private Operator MUL_DIV() throws Exception {
@@ -614,38 +614,38 @@ public class Parser {
 		return o;
 	}
 
-	private LexicalUnit FACTOR() throws Exception {
-		LexicalUnit l = null;
+	private Type FACTOR() throws Exception {
+		Type t = null;
 		switch(currentToken.unit){
 		case NOT : 
 			match(NOT);
-			l = NUMBER();
-			l = resultType(l, Operator.NOT, l);
+			t = NUMBER();
+			t = resultType(t, Operator.NOT, t);
 			break;
 		case MINUS_SIGN : 
 			match(MINUS_SIGN);
-			l = NUMBER();
-			l = resultType(l, Operator.UN_MINUS, l);
+			t = NUMBER();
+			t = resultType(t, Operator.UN_MINUS, t);
 			break;
 		case IDENTIFIER:
 		case INTEGER:
 		case LEFT_PARENTHESIS:
 		case TRUE:
 		case FALSE:
-			l = NUMBER();
+			t = NUMBER();
 			break;			
 		default: syntax_error("Missing: NOT or MINUS_SIGN or IDENTIFIER or INTEGER or LEFT_PARENTHESIS or TRUE or FALSE"); break;
 		}
-		return l;
+		return t;
 	}
 
-	private LexicalUnit NUMBER() throws Exception {
-		LexicalUnit l = null;
+	private Type NUMBER() throws Exception {
+		Type t = new Type();
 
 		switch(currentToken.unit){
 		case LEFT_PARENTHESIS:
 			match(LEFT_PARENTHESIS);
-			l = EXPRESSION();
+			t = EXPRESSION();
 			match(RIGHT_PARENTHESIS);
 			break;
 		case IDENTIFIER:
@@ -654,44 +654,43 @@ public class Parser {
 			Symbol<?> s;
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			l = (LexicalUnit) s.get(Symbol.TYPE);
-			// Update the image:
-			l.updateImageWithImage((String) s.get(Symbol.IMAGE));
+			t = (Type) s.get(Symbol.TYPE);
 			break;
 		case INTEGER:
 			match(INTEGER);
-			l = INTEGER;
-			// Update the image:
-			updateImage();
+			// Update the type:
+			t.l = INTEGER;
+			t.updateImage(this.previousToken.getValue());
 			break;
 		case REAL:
 			match(REAL);
-			l = REAL;
-			// Update the image:
-			updateImage();
+			// Update the type:
+			t.l = REAL;
+			t.updateImage(this.previousToken.getValue());
 			break;
 		case TRUE:
 			match(TRUE);
-			l = INTEGER;
+			t.l = INTEGER;
+			t.updateImage("1");
 			break;
 		case FALSE:
 			match(FALSE);
-			l = INTEGER;
+			t.l = INTEGER;
+			t.updateImage("0");
 			break;
 		default: syntax_error("Missing: LEFT_PARENTHESIS or IDENTIFIER or INTEGER or TRUE or FALSE"); break;
 		}
-		return l;
+		return t;
 	}
 
-	private LexicalUnit VALUE_REC(LexicalUnit l) throws Exception {
+	private Type VALUE_REC(Type t) throws Exception {
 
 		switch(currentToken.unit){
 		case PLUS_SIGN :
 		case MINUS_SIGN:
 			Operator o = PLUS_MINUS();
-			LexicalUnit lu1 = TERM();
-			l = VALUE_REC(resultType(l, o, lu1));
-
+			Type t1 = TERM();
+			t = VALUE_REC(resultType(t, o, t1));
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -710,7 +709,7 @@ public class Parser {
 			break;
 		default: syntax_error("Missing: PLUS_SIGN or MINUS_SIGN or END_OF_INSTRUCTION or TO or GIVING or COMMA or OR or AND or RIGHT_PARENTHESIS or LOWER_THAN or GREATER_THAN or LOWER_OR_EQUALS or GREATER_OR_EQUALS or EQUALS_SIGN or THEN or FROM"); break;
 		}
-		return l;
+		return t;
 	}
 
 	private Operator PLUS_MINUS() throws Exception {
@@ -806,6 +805,11 @@ public class Parser {
 			t.image.digitAfter = t2.image.digitBefore + t1.image.digitAfter;
 			t.image.signed = t1.image.signed || t2.image.signed;
 			break;
+		case UN_MINUS:
+			t.image.digitBefore = t1.image.digitBefore;
+			t.image.digitAfter = t1.image.digitAfter;
+			t.image.signed = true;
+			break;
 		}
 		
 		
@@ -813,8 +817,11 @@ public class Parser {
 	}
 
 	private void checkAssignationCompatibility(Symbol<?> rec, Type exp) throws Exception{
+		
+		if (exp == null) return;	// In case there is no expression.
+		
 		// Check basic compatibility:
-		int compLevel = LexicalUnit.checkAssignationCompatibility((LexicalUnit) rec.get(Symbol.TYPE), exp.l);
+		int compLevel = LexicalUnit.checkAssignationCompatibility(((Type) rec.get(Symbol.TYPE)).l, exp.l);
 
 		if (compLevel == NC){
 			throw new Exception("Type incompatibility for assignation on line " + previousToken.get(Symbol.LINE) + ": " + rec.getValue() + " and " + exp + " are not compatible." +
@@ -825,13 +832,13 @@ public class Parser {
 
 			Type recType = (Type) rec.get(Symbol.TYPE);
 			if (exp.image.signed && !recType.image.signed)
-				System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The unsigned variable cannot be assigned a signed expression.");
+				System.out.println("Warning: On line: " + this.previousToken.get(Symbol.LINE) + " : The unsigned variable cannot be assigned a signed expression.");
 
 			if (exp.image.digitBefore > recType.image.digitBefore)
-				System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The integer part of the expression may be truncated (smaller image).");
+				System.out.println("Warning: On line: " + this.previousToken.get(Symbol.LINE) + " : The integer part of the expression may be truncated (smaller image).");
 
 			if (exp.image.digitAfter > recType.image.digitAfter)
-				System.out.println("Warning: On line: " + rec.get(Symbol.LINE) + " : The decimal part of the expression may be truncated (smaller image).");
+				System.out.println("Warning: On line: " + this.previousToken.get(Symbol.LINE) + " : The decimal part of the expression may be truncated (smaller image).");
 
 
 		}	// No cast needed.
