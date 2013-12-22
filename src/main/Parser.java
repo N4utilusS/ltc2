@@ -16,8 +16,10 @@ public class Parser {
 	private Symbol<String> previousToken;
 	private List<Symbol<String>> usedLabels;
 	private Map<String,Symbol<?>> tableOfSymbols;
+	private LLVM llvm;
 
 	public Parser(){
+		this.llvm = new LLVM("result.ll");
 		this.usedLabels = new ArrayList<Symbol<String>>();
 		//this.cobolScanner = new Scanner(System.in);
 		try {
@@ -39,6 +41,9 @@ public class Parser {
 			e.printStackTrace();
 			System.out.println(e.getMessage());
 		}
+		finally{
+			llvm.close();
+		}
 	}
 
 	public Scanner getScanner(){
@@ -56,6 +61,9 @@ public class Parser {
 		match(WORKING_STORAGE);
 		match(SECTION);
 		END_INST();
+		// LLVM ----------
+		llvm.writeMain();
+		// ---------
 		VAR_LIST();
 	}
 
@@ -73,13 +81,17 @@ public class Parser {
 
 	private void VAR_DECL() throws Exception {
 		Type t = null;
-		Symbol<?> s = null;
+		Symbol<String> s = null;
 
 		LEVEL();
 		match(IDENTIFIER); s = this.previousToken;
 		match(IMAGE);
 		// Use the image to give a type to the symbol:
 		s.setTypeWithImage();
+		// LLVM -------
+		Type varT = (Type) s.get(Symbol.TYPE);
+		llvm.varDecl(s.getValue(), varT.image);
+		// --------
 		t = VD_FACT();
 		checkAssignationCompatibility(s, t);
 	}
@@ -791,7 +803,7 @@ public class Parser {
 			t.image.signed = t1.image.signed || t2.image.signed;
 			break;
 		case MINUS:
-			t.image.digitBefore = Math.max(t1.image.digitBefore, t2.image.digitBefore) + 1;
+			t.image.digitBefore = Math.max(t1.image.digitBefore, t2.image.digitBefore) + ((t2.image.signed) ? 1 : 0);
 			t.image.digitAfter = Math.max(t1.image.digitAfter, t2.image.digitAfter);
 			t.image.signed = true;
 			break;
@@ -832,7 +844,7 @@ public class Parser {
 
 			Type recType = (Type) rec.get(Symbol.TYPE);
 			if (exp.image.signed && !recType.image.signed)
-				System.out.println("Warning: On line: " + this.previousToken.get(Symbol.LINE) + " : The unsigned variable cannot be assigned a signed expression.");
+				System.out.println("Warning: On line: " + this.previousToken.get(Symbol.LINE) + " : The unsigned variable shouldn't be assigned to a signed expression.");
 
 			if (exp.image.digitBefore > recType.image.digitBefore)
 				System.out.println("Warning: On line: " + this.previousToken.get(Symbol.LINE) + " : The integer part of the expression may be truncated (smaller image).");

@@ -50,7 +50,7 @@ public class Main{
 		Collections.sort(variables,sorter);
 		Collections.sort(labels,sorter);
 		// print
-		System.out.println("variables");
+		System.out.println("\nvariables");
 		for(Symbol<String> identifier:variables)
 			System.out.println(identifier.getValue()+"\t"+identifier.get(Symbol.IMAGE)+"\t"+((Type) identifier.get(Symbol.TYPE)).l);
 		System.out.println("labels");
