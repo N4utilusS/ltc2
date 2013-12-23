@@ -17,6 +17,7 @@ public class Parser {
 	private List<Symbol<String>> usedLabels;
 	private Map<String,Symbol<?>> tableOfSymbols;
 	private LLVM llvm;
+	private boolean acceptEncountered = false;
 
 	public Parser(){
 		this.llvm = new LLVM("result.ll");
@@ -34,6 +35,11 @@ public class Parser {
 				if (!tableOfSymbols.containsKey(s.getValue()))
 					throw new Exception("LINE: " + s.get(Symbol.LINE) + "\nUse of undefined label: " + s.getValue() + "\n");
 			}
+			
+			// Write the read function for int if the accept is encountered.
+			if (this.acceptEncountered)
+				this.llvm.writeReadInt();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 			//System.out.println("PROBLEME: " + e.getMessage());
@@ -320,6 +326,8 @@ public class Parser {
 		if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
 			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 		END_INST();
+		// Set the acceptEncountered to true, so the read llvm function is written in the file.
+		this.acceptEncountered = true;
 	}
 
 	private void CALL() throws Exception {
