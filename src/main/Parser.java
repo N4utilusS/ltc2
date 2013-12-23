@@ -67,10 +67,10 @@ public class Parser {
 		match(WORKING_STORAGE);
 		match(SECTION);
 		END_INST();
-		// LLVM ----------
-		llvm.writeMain();
-		// ---------
 		VAR_LIST();
+		// LLVM ----------
+		llvm.writeMainHeader();
+		// ---------
 	}
 
 	private void VAR_LIST() throws Exception {
@@ -676,7 +676,7 @@ public class Parser {
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			t = (Type) s.get(Symbol.TYPE);
 			// LLVM ---
-			llvm.w54((String) s.getValue(), t.image);
+			t.LLVMTempId = llvm.w54((String) s.getValue(), t.image);
 			// ---
 			break;
 		case INTEGER:
@@ -686,7 +686,7 @@ public class Parser {
 			t.l = INTEGER;
 			t.updateImage(this.previousToken.getValue());
 			// LLVM ---
-			llvm.w55((String) s.getValue(), t.image);
+			t.LLVMTempId = llvm.w55((String) this.previousToken.getValue(), t.image);
 			// ---
 			break;
 		case REAL:
@@ -695,18 +695,27 @@ public class Parser {
 			t = new Type();
 			t.l = REAL;
 			t.updateImage(this.previousToken.getValue());
+			// LLVM ---
+			t.LLVMTempId = llvm.w56((String) this.previousToken.getValue());
+			// ---
 			break;
 		case TRUE:
 			match(TRUE);
 			t = new Type();
 			t.l = INTEGER;
 			t.updateImage("1");
+			// LLVM ---
+			t.LLVMTempId = llvm.w57();
+			// ---
 			break;
 		case FALSE:
 			match(FALSE);
 			t = new Type();
 			t.l = INTEGER;
 			t.updateImage("0");
+			// LLVM ---
+			t.LLVMTempId = llvm.w58();
+			// ---
 			break;
 		default: syntax_error("Missing: LEFT_PARENTHESIS or IDENTIFIER or INTEGER or TRUE or FALSE"); break;
 		}
