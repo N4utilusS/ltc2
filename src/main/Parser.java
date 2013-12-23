@@ -35,11 +35,11 @@ public class Parser {
 				if (!tableOfSymbols.containsKey(s.getValue()))
 					throw new Exception("LINE: " + s.get(Symbol.LINE) + "\nUse of undefined label: " + s.getValue() + "\n");
 			}
-			
+
 			// Write the read function for int if the accept is encountered.
 			if (this.acceptEncountered)
 				this.llvm.writeReadInt();
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			//System.out.println("PROBLEME: " + e.getMessage());
@@ -660,7 +660,7 @@ public class Parser {
 	}
 
 	private Type NUMBER() throws Exception {
-		Type t = new Type();
+		Type t = null;
 
 		switch(currentToken.unit){
 		case LEFT_PARENTHESIS:
@@ -675,26 +675,36 @@ public class Parser {
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			t = (Type) s.get(Symbol.TYPE);
+			// LLVM ---
+			llvm.w54((String) s.getValue(), t.image);
+			// ---
 			break;
 		case INTEGER:
 			match(INTEGER);
 			// Update the type:
+			t = new Type();
 			t.l = INTEGER;
 			t.updateImage(this.previousToken.getValue());
+			// LLVM ---
+			llvm.w55((String) s.getValue(), t.image);
+			// ---
 			break;
 		case REAL:
 			match(REAL);
 			// Update the type:
+			t = new Type();
 			t.l = REAL;
 			t.updateImage(this.previousToken.getValue());
 			break;
 		case TRUE:
 			match(TRUE);
+			t = new Type();
 			t.l = INTEGER;
 			t.updateImage("1");
 			break;
 		case FALSE:
 			match(FALSE);
+			t = new Type();
 			t.l = INTEGER;
 			t.updateImage("0");
 			break;
@@ -790,10 +800,10 @@ public class Parser {
 		if (l == null)	// null means no existing compatibility.
 			throw new Exception("Type incompatibility on line " + previousToken.get(Symbol.LINE) + ": " + t1.l + " and " + t2.l + " are not compatible." +
 					" Learn to code.");
-		
+
 		Type t = new Type();
 		t.l = l;
-		
+
 		switch (op){
 		case NOT:
 		case AND:
@@ -831,17 +841,18 @@ public class Parser {
 			t.image.signed = true;
 			break;
 		}
-		
-		
+
+
 		return t;
 	}
 
 	private void checkAssignationCompatibility(Symbol<?> rec, Type exp) throws Exception{
-		
+
 		if (exp == null) return;	// In case there is no expression.
-		
+
 		// Check basic compatibility:
-		int compLevel = LexicalUnit.checkAssignationCompatibility(((Type) rec.get(Symbol.TYPE)).l, exp.l);
+		Type recType = (Type) rec.get(Symbol.TYPE);
+		int compLevel = LexicalUnit.checkAssignationCompatibility(recType.l, exp.l);
 
 		if (compLevel == NC){
 			throw new Exception("Type incompatibility for assignation on line " + previousToken.get(Symbol.LINE) + ": " + rec.getValue() + " and " + exp + " are not compatible." +
@@ -850,7 +861,6 @@ public class Parser {
 		else if (compLevel == SC){	// Cast may be needed.
 			// Check images:
 
-			Type recType = (Type) rec.get(Symbol.TYPE);
 			if (exp.image.signed && !recType.image.signed)
 				System.out.println("Warning: On line: " + this.previousToken.get(Symbol.LINE) + " : The unsigned variable shouldn't be assigned to a signed expression.");
 
@@ -861,7 +871,38 @@ public class Parser {
 				System.out.println("Warning: On line: " + this.previousToken.get(Symbol.LINE) + " : The decimal part of the expression may be truncated (smaller image).");
 
 
+
+			int numberBitV = (int) Math.ceil(recType.image.digitBefore/Math.log10(2)) + 1;
+			int numberBitE = (int) Math.ceil(exp.image.digitBefore/Math.log10(2)) + 1;
+
+			this.llvm.writeToLLFile("");
+
+			if (recType.image.digitAfter == 0 && exp.image.digitAfter == 0){	// INTEGER <-- INTEGER
+
+				if (numberBitV > numberBitE){
+					this.llvm.writeToLLFile("%1 = sext i" + numberBitE + " %0 to i" + numberBitV);
+				}
+				else if (numberBitV < numberBitE){
+					this.llvm.writeToLLFile("%1 = trunc i" + numberBitE + " %0 to i" + numberBitV);
+				}
+
+				this.llvm.writeToLLFile("store i" + numberBitV + " %1, i" + numberBitV + "* %" + rec.getValue());
+			}
+			else if (recType.image.digitAfter > 0 && exp.image.digitAfter == 0){	// REAL <-- INTEGER
+				this.llvm.writeToLLFile("%1 = sitofp i" + numberBitE + " %0 to float");
+				this.llvm.writeToLLFile("store float %1, float* %" + rec.getValue());
+			}
+			else if (recType.image.digitAfter == 0 && exp.image.digitAfter > 0){	// INTEGER <-- REAL
+				this.llvm.writeToLLFile("%1 = fptosi float %0 to i" + numberBitV);
+				this.llvm.writeToLLFile("store i" + numberBitV + " %1, i" + numberBitV + "* %" + rec.getValue());
+			}
+			else{	// REAL <-- REAL
+				this.llvm.writeToLLFile("store float %0, float* %" + rec.getValue());
+			}
+
 		}	// No cast needed.
+
+
 
 	}
 }

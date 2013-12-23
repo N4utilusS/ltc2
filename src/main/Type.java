@@ -3,6 +3,7 @@ package main;
 public class Type {
 	LexicalUnit l;
 	Image image = new Image();
+	
 
 	/**
 	 * We update the image to know whether it will be truncated.

@@ -12,7 +12,7 @@ data division.
 /Define our variables.
 working-storage section.
 /we define 3 variables (a, b, c).
-77 a s9(5).
+77 a s9(5) value 42.
 /s for signed.
 77 b s9(5).
 /9 for digit (int).

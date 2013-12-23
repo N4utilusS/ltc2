@@ -52,7 +52,7 @@ public class Main{
 		// print
 		System.out.println("\nvariables");
 		for(Symbol<String> identifier:variables)
-			System.out.println(identifier.getValue()+"\t"+identifier.get(Symbol.IMAGE)+"\t"+((Type) identifier.get(Symbol.TYPE)).l);
+			System.out.println(identifier.getValue()+"\t"+identifier.get(Symbol.IMAGE)+"\t"+((Type) identifier.get(Symbol.TYPE)).l+"\t"+(String) identifier.get(Symbol.CONTENT));
 		System.out.println("labels");
 		for(Symbol<String> identifier:labels)
 			System.out.println(identifier.getValue()+"\t"+identifier.get(Symbol.LINE));

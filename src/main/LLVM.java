@@ -5,15 +5,20 @@ import java.io.IOException;
 
 public class LLVM {
 	private FileWriter fw;
-	
+	private long counter = 0;
+
 	LLVM(String path){
-			try {
-				this.fw = new FileWriter(path);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		try {
+			this.fw = new FileWriter(path);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
-	
+
+	long getCounter(){
+		return counter;
+	}
+
 	void writeToLLFile(String str){
 		try {
 			this.fw.write(str + "\n");
@@ -22,9 +27,9 @@ public class LLVM {
 			e.printStackTrace();
 		}
 	}
-	
+
 	void varDecl(String name, Image image){
-		
+
 		if (image.digitAfter > 0){
 			this.writeToLLFile("%" + name + " = alloca float");
 		}
@@ -32,11 +37,9 @@ public class LLVM {
 			int nbBit = (int) Math.ceil(image.digitBefore/Math.log10(2)) + 1;
 			this.writeToLLFile("%" + name + " = alloca i" + nbBit);
 		}
-		
+
 	}
-	
-	
-	
+
 	void writeMain(){
 		this.writeToLLFile("define i32 @main () {");
 	}
@@ -48,14 +51,16 @@ public class LLVM {
 			e.printStackTrace();
 		}
 	}
-	
+
 	void writeHeader(){
 		//this.writeToLLFile("declare i32 @getchar ()");
 		this.writeToLLFile("declare i32 (i8*, ...)* @printf(i8*, ...) nounwind");
-		
-		
+
+
 	}
-	
+
+
+
 	void writeReadInt(){
 		this.writeToLLFile("declare i32 @getchar ()");
 		this.writeToLLFile("define i32 @readInt() {\n" +
@@ -82,4 +87,46 @@ public class LLVM {
 				"ret i32 %7\n" +
 				"}");
 	}
+	
+	long w54(String name, Image image){
+
+		if (image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = load float* %" + name);
+		}
+		else{
+			int nbBit = (int) Math.ceil(image.digitBefore/Math.log10(2)) + 1;
+			this.writeToLLFile("%" + ++this.counter + " = load i" + nbBit + "* %" + name);
+		}
+		
+		return this.counter;
+	}
+
+	long w55(String number, Image image){
+
+		number = number.replaceFirst("\\+", "");
+		int nbBit = (int) Math.ceil(image.digitBefore/Math.log10(2)) + 1;
+		this.writeToLLFile("%" + ++this.counter + " = i" + nbBit + " " + number);
+		return this.counter;
+	}
+
+	long w56(String number){
+
+		number = number.replaceFirst("\\+", "");
+		this.writeToLLFile("%" + ++this.counter + " = float " + number);
+		return this.counter;
+	}
+
+	long w57(){
+		int nbBit = (int) Math.ceil(1/Math.log10(2)) + 1;
+		this.writeToLLFile("%" + ++this.counter + " = i" + nbBit + " 1");
+		return this.counter;
+	}
+
+	long w58(){
+		int nbBit = (int) Math.ceil(1/Math.log10(2)) + 1;
+		this.writeToLLFile("%" + ++this.counter + " = i" + nbBit + " 0");
+		return this.counter;
+	}
+
+
 }
