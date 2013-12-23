@@ -636,19 +636,25 @@ public class Parser {
 
 	private Type FACTOR() throws Exception {
 		Type t = null;
+		long id;
 		switch(currentToken.unit){
 		case NOT : 
 			match(NOT);
 			t = NUMBER();
 			// LLVM ---
-			t.LLVMTempId = llvm.w50(t.LLVMTempId, t.image);
+			id = llvm.w50(t.LLVMTempId, t.image);
 			// ---
 			t = resultType(t, Operator.NOT, t);
+			t.LLVMTempId = id;
 			break;
-		case MINUS_SIGN : 
+		case MINUS_SIGN :
 			match(MINUS_SIGN);
 			t = NUMBER();
+			// LLVM ---
+			id = llvm.w51(t.LLVMTempId, t.image);
+			// ---
 			t = resultType(t, Operator.UN_MINUS, t);
+			t.LLVMTempId = id;
 			break;
 		case IDENTIFIER:
 		case INTEGER:

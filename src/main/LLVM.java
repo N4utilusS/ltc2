@@ -87,11 +87,7 @@ public class LLVM {
 				"ret i32 %7\n" +
 				"}");
 	}
-	
-	long w51(){
-		return this.counter;
-	}
-	
+
 	long w50(long id, Image image){	// Not
 
 		int nbBit = (int) Math.ceil(1/Math.log10(2)) + 1;
@@ -107,10 +103,24 @@ public class LLVM {
 			this.writeToLLFile("%" + ++this.counter + " = icmp ne i" + nbBit2 + " %" + id + ", 0"
 					+ "%" + ++this.counter + " = xor i1 %" + (this.counter-1) + ", true"
 					+ "%" + ++this.counter + " = zext i1 %" + (this.counter-1) + " to i" + nbBit);
-			}
+		}
 		return this.counter;
 	}
-	
+
+	long w51(long id, Image image){	// - number
+
+		if (image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fsub float -0.000000e+00, %" + id);
+		}
+		else{
+			int nbBit = (int) Math.ceil(image.digitBefore/Math.log10(2)) + 1;
+
+			this.writeToLLFile("%" + ++this.counter + " = sub i" + nbBit + " 0, %" + id);
+		}
+		
+		return this.counter;
+	}
+
 	long w54(String name, Image image){
 
 		if (image.digitAfter > 0){
