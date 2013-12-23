@@ -640,6 +640,9 @@ public class Parser {
 		case NOT : 
 			match(NOT);
 			t = NUMBER();
+			// LLVM ---
+			t.LLVMTempId = llvm.w50(t.LLVMTempId, t.image);
+			// ---
 			t = resultType(t, Operator.NOT, t);
 			break;
 		case MINUS_SIGN : 
