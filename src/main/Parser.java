@@ -595,7 +595,7 @@ public class Parser {
 			Operator o = MUL_DIV();
 			Type t1 = FACTOR();
 			Type rT = resultType(t, o, t1);
-			rT.LLVMTempId = llvm.w48(t, t1, rT);
+			rT.LLVMTempId = llvm.w48(t, o, t1, rT);
 			t = TERM_REC(rT);
 			break;
 		case END_OF_INSTRUCTION:
@@ -644,7 +644,7 @@ public class Parser {
 			match(NOT);
 			t = NUMBER();
 			// LLVM ---
-			id = llvm.w50(t.LLVMTempId, t.image);
+			id = llvm.w50(t);
 			// ---
 			t = resultType(t, Operator.NOT, t);
 			t.LLVMTempId = id;
@@ -653,7 +653,7 @@ public class Parser {
 			match(MINUS_SIGN);
 			t = NUMBER();
 			// LLVM ---
-			id = llvm.w51(t.LLVMTempId, t.image);
+			id = llvm.w51(t);
 			// ---
 			t = resultType(t, Operator.UN_MINUS, t);
 			t.LLVMTempId = id;
