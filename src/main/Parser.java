@@ -342,6 +342,8 @@ public class Parser {
 		END_INST();
 		// Set the acceptEncountered to true, so the read llvm function is written in the file.
 		this.acceptEncountered = true;
+		long id = llvm.wAccept();
+		
 	}
 
 	private void CALL() throws Exception {

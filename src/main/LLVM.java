@@ -61,9 +61,17 @@ public class LLVM {
 
 	void writeHeader(){
 		//this.writeToLLFile("declare i32 @getchar ()");
-		this.writeToLLFile("declare i32 (i8*, ...)* @printf(i8*, ...) nounwind");
+		this.writeToLLFile("@.str = private unnamed_addr constant [3 x i8] c\"%f\\00\", align 1" +
+				"declare i32 @printf(i8*, ...)\n" +
+				"declare i32 @scanf(i8*, ...)");
 
 
+	}
+	
+	long wAccept(){
+		this.writeToLLFile("%" + ++this.counter + " = alloca float\n" +
+				"%" + ++this.counter + " = call i32 (i8*, ...)* @scanf(i8* getelementptr inbounds ([3 x i8]* @.str, i32 0, i32 0), float* %" + (this.counter-1) + ")");
+	return this.counter-1;
 	}
 
 

@@ -8,6 +8,7 @@ public class Type {
 	LexicalUnit l;
 	Image image = new Image();
 	long LLVMTempId = 0;
+	
 
 	/**
 	 * We update the image to know whether it will be truncated.
@@ -65,6 +66,9 @@ public class Type {
 			if (this.image.digitBefore < digitBefore)
 				this.image.digitBefore = digitBefore;
 		}
+		
+		if (this.image.digitBefore > this.image.maxDigitBefore)
+			this.image.maxDigitBefore = this.image.digitBefore;
 	}
 
 }
