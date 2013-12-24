@@ -1,7 +1,7 @@
 package main;
 /**
- * Data structure representing the type of a variable.
- * It contains a lexical unit, an image and the corresponding temporary ID in the LLVM code.
+ * Data structure representing the type of a variable or an expression.
+ * It contains a lexical unit, an image and the corresponding temporary ID (temporary variable) in the LLVM code.
  *
  */
 public class Type {

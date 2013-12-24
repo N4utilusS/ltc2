@@ -841,7 +841,7 @@ public class Parser {
 			t.image.signed = t1.image.signed || t2.image.signed;
 			break;
 		case MINUS:
-			t.image.digitBefore = Math.max(t1.image.digitBefore, t2.image.digitBefore) + ((t2.image.signed) ? 1 : 0);
+			t.image.digitBefore = Math.max(t1.image.digitBefore, t2.image.digitBefore) + ((t2.image.signed || t1.image.signed ) ? 1 : 0);
 			t.image.digitAfter = Math.max(t1.image.digitAfter, t2.image.digitAfter);
 			t.image.signed = true;
 			break;
