@@ -474,7 +474,11 @@ public class Parser {
 		case OR :
 			match(OR);
 			Type t1 = CONDITION();
-			t = EXPRESSION_REC(resultType(t, Operator.OR, t1));
+			Type rT = resultType(t, Operator.OR, t1);
+			// LLVM ---
+			rT.LLVMTempId = llvm.w36(t, t1, rT);
+			// ---
+			t = EXPRESSION_REC(rT);
 			break;
 		case END_OF_INSTRUCTION :
 		case TO:
@@ -500,7 +504,11 @@ public class Parser {
 		case AND : 
 			match(AND);
 			Type t1 = SUBCONDITION();
-			t = CONDITION_REC(resultType(t, Operator.AND, t1));
+			Type rT = resultType(t, Operator.AND, t1);
+			// LLVM ---
+			rT.LLVMTempId = llvm.w39(t, t1, rT);
+			// ---
+			t = CONDITION_REC(rT);
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:

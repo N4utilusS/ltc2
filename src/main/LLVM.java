@@ -93,6 +93,60 @@ public class LLVM {
 				"ret i32 %7\n" +
 				"}");
 	}
+	
+	long w36(Type t1, Type t2, Type rT) {
+
+		int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+
+		if (t1.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp one float %" + t1.LLVMTempId + ", 0");
+		}
+		else{
+			int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
+			this.writeToLLFile("%" + ++this.counter + " = icmp ne i" + nbBit1 + " %" + t1.LLVMTempId + ", 0");
+		}
+		
+		if (t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp one float %" + t2.LLVMTempId + ", 0");
+		}
+		else{
+			int nbBit2 = (int) Math.ceil(t2.image.digitBefore/Math.log10(2)) + 1;
+			this.writeToLLFile("%" + ++this.counter + " = icmp ne i" + nbBit2 + " %" + t2.LLVMTempId + ", 0");
+		}
+		
+		this.writeToLLFile("%" + ++this.counter + " = or i1 %" + (this.counter-2) + ", %" + (this.counter-1));
+
+		this.writeToLLFile("%" + ++this.counter + " = zext i1 %" + (this.counter-1) + " to i" + nbBit);
+
+		return this.counter;
+	}
+	
+	long w39(Type t1, Type t2, Type rT) {
+
+		int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+
+		if (t1.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp one float %" + t1.LLVMTempId + ", 0");
+		}
+		else{
+			int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
+			this.writeToLLFile("%" + ++this.counter + " = icmp ne i" + nbBit1 + " %" + t1.LLVMTempId + ", 0");
+		}
+		
+		if (t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp one float %" + t2.LLVMTempId + ", 0");
+		}
+		else{
+			int nbBit2 = (int) Math.ceil(t2.image.digitBefore/Math.log10(2)) + 1;
+			this.writeToLLFile("%" + ++this.counter + " = icmp ne i" + nbBit2 + " %" + t2.LLVMTempId + ", 0");
+		}
+		
+		this.writeToLLFile("%" + ++this.counter + " = and i1 %" + (this.counter-2) + ", %" + (this.counter-1));
+
+		this.writeToLLFile("%" + ++this.counter + " = zext i1 %" + (this.counter-1) + " to i" + nbBit);
+
+		return this.counter;
+	}
 
 	long w42(Type t1, Operator o, Type t2, Type rT){
 		long c = 0;
