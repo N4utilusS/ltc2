@@ -1,17 +1,12 @@
 package main;
 
-import static main.LexicalUnit.EQUALS_SIGN;
-import static main.LexicalUnit.GREATER_OR_EQUALS;
-import static main.LexicalUnit.GREATER_THAN;
-import static main.LexicalUnit.LOWER_OR_EQUALS;
-import static main.LexicalUnit.LOWER_THAN;
-
 import java.io.FileWriter;
 import java.io.IOException;
 
 public class LLVM {
 	private FileWriter fw;
 	private long counter = 0;
+	private long labelCounter = 0;
 
 	LLVM(String path){
 		try {
@@ -24,6 +19,8 @@ public class LLVM {
 	long getCounter(){
 		return counter;
 	}
+	
+	
 
 	void writeToLLFile(String str){
 		try {
@@ -92,6 +89,20 @@ public class LLVM {
 				"%7 = load i32* %res\n" +
 				"ret i32 %7\n" +
 				"}");
+	}
+	
+	long wLogicalExpRes(Type t){
+		
+
+		if (t.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp one float %" + t.LLVMTempId + ", 0");
+		}
+		else{
+			int nbBit = (int) Math.ceil(t.image.digitBefore/Math.log10(2)) + 1;
+			this.writeToLLFile("%" + ++this.counter + " = icmp ne i" + nbBit + " %" + t.LLVMTempId + ", 0");
+		}
+		
+		return this.counter;
 	}
 	
 	void wLabelHeader(String name){

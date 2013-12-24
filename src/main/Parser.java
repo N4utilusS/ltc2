@@ -362,6 +362,9 @@ public class Parser {
 		case IF : 
 			match(IF);
 			Type t = EXPRESSION(); checkLogicalExpression(t);
+			// LLVM ---
+			llvm.wIf();
+			// ---
 			match(THEN);
 			INSTRUCTION_LIST();
 			IF_END();
