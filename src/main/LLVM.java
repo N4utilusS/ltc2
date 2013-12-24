@@ -91,6 +91,22 @@ public class LLVM {
 				"}");
 	}
 	
+	
+	
+	void wIf(long id){
+		this.writeToLLFile("br i1 %" + id + ", label %L" + this.labelCounter + ", label %L" + (this.labelCounter+1) + "\n" +
+				"L" + this.labelCounter + ":");
+	}
+	
+	void wElse(){
+		this.writeToLLFile("br label %L" + (this.labelCounter+2) + "\nL" + (this.labelCounter+1) + ":");
+	}
+	
+	void wEndIf(){
+		this.writeToLLFile("br label %L" + (this.labelCounter+2) + "\nL" + (this.labelCounter+2) + ":");
+		this.labelCounter += 3;
+	}
+	
 	long wLogicalExpRes(Type t){
 		
 

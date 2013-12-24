@@ -228,7 +228,7 @@ public class Parser {
 		// LLVM ---
 		llvm.wLabelFooter();
 		// ---
-		
+
 		switch(currentToken.unit){
 		case IDENTIFIER : 
 			LABEL();
@@ -363,7 +363,8 @@ public class Parser {
 			match(IF);
 			Type t = EXPRESSION(); checkLogicalExpression(t);
 			// LLVM ---
-			llvm.wIf();
+			long id = llvm.wLogicalExpRes(t);
+			llvm.wIf(id);
 			// ---
 			match(THEN);
 			INSTRUCTION_LIST();
@@ -379,6 +380,9 @@ public class Parser {
 	}
 
 	private void IF_END() throws Exception {
+		// LLVM ---
+		llvm.wElse();
+		// ---
 		switch(currentToken.unit){
 		case ELSE : 
 			match(ELSE);
@@ -390,6 +394,9 @@ public class Parser {
 			break;
 		default: syntax_error("Missing: ELSE or END_IF"); break;
 		}
+		// LLVM ---
+		llvm.wEndIf();
+		// ---
 	}
 
 	private void ASSIGNATION() throws Exception {
