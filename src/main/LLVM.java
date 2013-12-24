@@ -47,7 +47,7 @@ public class LLVM {
 	}
 
 	void writeMainHeader(){
-		this.writeToLLFile("define i32 @main () nounwind ssp uwtable {");
+		this.writeToLLFile("define i32 @main () nounwind ssp uwtable {\nentry:");
 	}
 
 	void close() {
@@ -92,6 +92,56 @@ public class LLVM {
 				"%7 = load i32* %res\n" +
 				"ret i32 %7\n" +
 				"}");
+	}
+	
+	void wLabelHeader(String name){
+		this.writeToLLFile("define void @" + name + "(){\nentry:");
+	}
+	
+	void wLabelFooter(){
+		this.writeToLLFile("}");
+	}
+	
+	void w28(Symbol<?> s, Type exp){
+		
+		Type recType = (Type) s.get(Symbol.TYPE);
+		
+		int numberBitV = (int) Math.ceil(recType.image.digitBefore/Math.log10(2)) + 1;
+		int numberBitE = (int) Math.ceil(exp.image.digitBefore/Math.log10(2)) + 1;
+
+		if (recType.image.digitAfter == 0 && exp.image.digitAfter == 0){	// INTEGER <-- INTEGER
+
+			if (numberBitV > numberBitE){
+				if (recType.image.signed)
+					this.writeToLLFile("%" + ++this.counter + " = sext i" + numberBitE + " %" + exp.LLVMTempId + " to i" + numberBitV);
+				else
+					this.writeToLLFile("%" + ++this.counter + " = zext i" + numberBitE + " %" + exp.LLVMTempId + " to i" + numberBitV);
+			}
+			else if (numberBitV < numberBitE){
+				this.writeToLLFile("%" + ++this.counter + " = trunc i" + numberBitE + " %" + exp.LLVMTempId + " to i" + numberBitV);
+			}
+
+			this.writeToLLFile("store i" + numberBitV + " %" + (this.counter-1) + ", i" + numberBitV + "* @" + s.getValue());
+		}
+		else if (recType.image.digitAfter > 0 && exp.image.digitAfter == 0){	// REAL <-- INTEGER
+			if (exp.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + numberBitE + " %0 to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + numberBitE + " %0 to float");
+			
+			this.writeToLLFile("store float %" + (this.counter-1) + ", float* @" + s.getValue());
+		}
+		else if (recType.image.digitAfter == 0 && exp.image.digitAfter > 0){	// INTEGER <-- REAL
+			if (recType.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = fptosi float %" + exp.LLVMTempId + " to i" + numberBitV);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = fptoui float %" + exp.LLVMTempId + " to i" + numberBitV);
+			
+			this.writeToLLFile("store i" + numberBitV + " %" + (this.counter-1) + ", i" + numberBitV + "* @" + s.getValue());
+		}
+		else{	// REAL <-- REAL
+			this.writeToLLFile("store float %" + exp.LLVMTempId + ", float* @" + s.getValue());
+		}
 	}
 	
 	long w36(Type t1, Type t2, Type rT) {

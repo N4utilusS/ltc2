@@ -225,6 +225,10 @@ public class Parser {
 	}
 
 	private void LABELS_REC() throws Exception {
+		// LLVM ---
+		llvm.wLabelFooter();
+		// ---
+		
 		switch(currentToken.unit){
 		case IDENTIFIER : 
 			LABEL();
@@ -388,6 +392,7 @@ public class Parser {
 	private void ASSIGNATION() throws Exception {
 		Type t = null;
 		Symbol<?> s = null;
+		Type rT = null, vT = null;
 		switch(currentToken.unit){
 		case MOVE : 
 			match(MOVE);
@@ -398,6 +403,9 @@ public class Parser {
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 			checkAssignationCompatibility(s, t);
+			// LLVM ---
+			llvm.w28(s, t);
+			// ---
 			END_INST();
 			break;
 		case COMPUTE :
@@ -409,6 +417,9 @@ public class Parser {
 			match(EQUALS_SIGN);
 			t = EXPRESSION();
 			checkAssignationCompatibility(s, t);
+			// LLVM ---
+			llvm.w28(s, t);
+			// ---
 			END_INST();
 			break;
 		case ADD:
@@ -419,8 +430,14 @@ public class Parser {
 			// Check if declared variable.
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			t = resultType((Type) s.get(Symbol.TYPE), Operator.PLUS, t);
-			checkAssignationCompatibility(s, t);
+			rT = resultType((Type) s.get(Symbol.TYPE), Operator.PLUS, t);
+			checkAssignationCompatibility(s, rT);
+			// LLVM ---
+			vT = (Type) s.get(Symbol.TYPE);
+			vT.LLVMTempId = llvm.w54((String) s.getValue(), (Image) s.get(Symbol.IMAGE));
+			rT.LLVMTempId = llvm.w45Plus(vT, t, rT);
+			llvm.w28(s, rT);
+			// ---
 			END_INST();
 			break;
 		case SUBTRACT:
@@ -431,8 +448,14 @@ public class Parser {
 			// Check if declared variable.
 			if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 				this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-			t = resultType((Type) s.get(Symbol.TYPE), Operator.MINUS, t);
-			checkAssignationCompatibility(s, t);
+			rT = resultType((Type) s.get(Symbol.TYPE), Operator.MINUS, t);
+			checkAssignationCompatibility(s, rT);
+			// LLVM ---
+			vT = (Type) s.get(Symbol.TYPE);
+			vT.LLVMTempId = llvm.w54((String) s.getValue(), (Image) s.get(Symbol.IMAGE));
+			rT.LLVMTempId = llvm.w45Minus(vT, t, rT);
+			llvm.w28(s, rT);
+			// ---
 			END_INST();
 			break;
 		case MULTIPLY:
@@ -444,12 +467,13 @@ public class Parser {
 			match(DIVIDE);
 			ASSING_END(Operator.DIVIDE);
 			END_INST();
+			break;
 		default: syntax_error("Missing: MOVE or COMPUTE or ADD or SUBTRACT or MULTIPLY or DIVIDE"); break;
 		}
 	}
 
 	private void ASSING_END(Operator o) throws Exception {
-		Type t1, t2, t;
+		Type t1, t2, rT, vT;
 		Symbol<?> s;
 		t1 = EXPRESSION();
 		match(COMMA);
@@ -459,8 +483,14 @@ public class Parser {
 		// Check if declared variable.
 		if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
-		t = resultType(t1, o, t2);
-		checkAssignationCompatibility(s, t);
+		rT = resultType(t1, o, t2);
+		checkAssignationCompatibility(s, rT);
+		// LLVM ---
+		vT = (Type) s.get(Symbol.TYPE);
+		vT.LLVMTempId = llvm.w54((String) s.getValue(), (Image) s.get(Symbol.IMAGE));
+		rT.LLVMTempId = llvm.w48(t1, o, t2, rT);
+		llvm.w28(s, rT);
+		// ---
 	}
 
 	private Type EXPRESSION() throws Exception {
@@ -798,6 +828,7 @@ public class Parser {
 
 	private void LABEL() throws Exception {
 		match(IDENTIFIER);
+		llvm.wLabelHeader(this.previousToken.getValue());
 	}
 
 	private void WORD() throws Exception {
@@ -908,35 +939,6 @@ public class Parser {
 			if (exp.image.digitAfter > recType.image.digitAfter)
 				System.out.println("Warning: On line: " + this.previousToken.get(Symbol.LINE) + " : The decimal part of the expression may be truncated (smaller image).");
 
-
-
-			int numberBitV = (int) Math.ceil(recType.image.digitBefore/Math.log10(2)) + 1;
-			int numberBitE = (int) Math.ceil(exp.image.digitBefore/Math.log10(2)) + 1;
-
-			this.llvm.writeToLLFile("");
-
-			if (recType.image.digitAfter == 0 && exp.image.digitAfter == 0){	// INTEGER <-- INTEGER
-
-				if (numberBitV > numberBitE){
-					this.llvm.writeToLLFile("%1 = sext i" + numberBitE + " %0 to i" + numberBitV);
-				}
-				else if (numberBitV < numberBitE){
-					this.llvm.writeToLLFile("%1 = trunc i" + numberBitE + " %0 to i" + numberBitV);
-				}
-
-				this.llvm.writeToLLFile("store i" + numberBitV + " %1, i" + numberBitV + "* %" + rec.getValue());
-			}
-			else if (recType.image.digitAfter > 0 && exp.image.digitAfter == 0){	// REAL <-- INTEGER
-				this.llvm.writeToLLFile("%1 = sitofp i" + numberBitE + " %0 to float");
-				this.llvm.writeToLLFile("store float %1, float* %" + rec.getValue());
-			}
-			else if (recType.image.digitAfter == 0 && exp.image.digitAfter > 0){	// INTEGER <-- REAL
-				this.llvm.writeToLLFile("%1 = fptosi float %0 to i" + numberBitV);
-				this.llvm.writeToLLFile("store i" + numberBitV + " %1, i" + numberBitV + "* %" + rec.getValue());
-			}
-			else{	// REAL <-- REAL
-				this.llvm.writeToLLFile("store float %0, float* %" + rec.getValue());
-			}
 
 		}	// No cast needed.
 
