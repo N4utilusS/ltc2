@@ -344,13 +344,19 @@ public class Parser {
 	}
 
 	private void CALL_FACT() throws Exception {
+		String labelName = this.previousToken.getValue();
+		
 		switch(currentToken.unit){
-		case UNTIL : 
+		case UNTIL :
 			match(UNTIL);
+			llvm.wPerfUntilHeader();
 			Type t = EXPRESSION(); checkLogicalExpression(t);
+			long id = llvm.wLogicalExpRes(t);
+			llvm.wPerfUntilFooter(name);
 			END_INST();
 			break;
 		case END_OF_INSTRUCTION:
+			llvm.wPerf(labelName);
 			END_INST();
 			break;
 		default: syntax_error("Missing: UNTIL or END_OF_INSTRUCTION"); break;

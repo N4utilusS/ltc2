@@ -91,7 +91,14 @@ public class LLVM {
 				"}");
 	}
 	
+	void wPerfUntilHeader(){
+		this.writeToLLFile("br label %L" + this.labelCounter + "\n" +
+				"L" + this.labelCounter + ":");
+	}
 	
+	void wPerf(String name){
+		this.writeToLLFile("call void @" + name + "()");
+	}
 	
 	void wIf(long id){
 		this.writeToLLFile("br i1 %" + id + ", label %L" + this.labelCounter + ", label %L" + (this.labelCounter+1) + "\n" +
