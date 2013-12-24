@@ -56,6 +56,8 @@ public class Main{
 		System.out.println("labels");
 		for(Symbol<String> identifier:labels)
 			System.out.println(identifier.getValue()+"\t"+identifier.get(Symbol.LINE));
-			
+	
+		long temp = 34 + 1;
+		System.out.println(temp);
 	}
 }

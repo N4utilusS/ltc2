@@ -1,24 +1,25 @@
-define i32 @main () {
-%a = alloca i18
+@a = global i18 0
 
 %1 = sext i8 %0 to i18
 store i18 %1, i18* %a
-%b = alloca i18
-%c = alloca i18
-%1 = load i18* %b
-%2 = load i18* %a
-%3 = load i18* %c
+@b = global i18 0
+@c = global i18 0
+define i32 @main () nounwind ssp uwtable {
+%1 = load i18* @b
+%2 = i5 0
+%3 = load i18* @a
+%4 = load i18* @c
 
 store i18 %1, i18* %b
-%4 = load i18* %a
-%5 = load i18* %b
-%6 = load i18* %a
+%5 = load i18* @a
+%6 = load i18* @b
+%7 = load i18* @a
 
 store i18 %1, i18* %b
-%7 = load i18* %c
+%8 = load i18* @c
 
 store i18 %1, i18* %a
-%8 = load i18* %b
+%9 = load i18* @b
 
 %1 = trunc i21 %0 to i18
 store i18 %1, i18* %a

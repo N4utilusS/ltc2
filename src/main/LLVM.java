@@ -88,12 +88,42 @@ public class LLVM {
 				"}");
 	}
 
+	long w48(Type t1, Type t2, Type rT){	// Multiply
+
+		if (t1.image.digitAfter > 0 && t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fmul float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId + "\n");
+		}
+		else if (t1.image.digitAfter > 0 && t2.image.digitAfter == 0){
+			if (t2.image.signed)
+				this.writeToLLFile("%2 = sitofp i" + t2.image.digitBefore + " %" + t2.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%2 = uitofp i" + t2.image.digitBefore + " %" + t2.LLVMTempId + " to float");
+			
+			this.writeToLLFile("%" + ++this.counter + " = fmul float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId + "\n");
+		}
+		else if (t1.image.digitAfter == 0 && t2.image.digitAfter > 0){
+			if (t1.image.signed)
+				this.writeToLLFile("%2 = sitofp i" + t1.image.digitBefore + " %" + t1.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%2 = uitofp i" + t1.image.digitBefore + " %" + t1.LLVMTempId + " to float");
+			
+			this.writeToLLFile("%" + ++this.counter + " = fmul float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId + "\n");
+		}
+		else{
+			int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+			
+			this.writeToLLFile("");
+		}
+
+		return this.counter;
+	}
+
 	long w50(long id, Image image){	// Not
 
 		int nbBit = (int) Math.ceil(1/Math.log10(2)) + 1;
 
 		if (image.digitAfter > 0){
-			this.writeToLLFile("%" + ++this.counter + " = icmp une float %" + id + ", 0.000000e+00"
+			this.writeToLLFile("%" + ++this.counter + " = fcmp une float %" + id + ", 0.000000e+00"
 					+ "%" + ++this.counter + " = xor i1 %" + (this.counter-1) + ", true"
 					+ "%" + ++this.counter + " = zext i1 %" + (this.counter-1) + " to i" + nbBit);
 		}
@@ -117,7 +147,7 @@ public class LLVM {
 
 			this.writeToLLFile("%" + ++this.counter + " = sub i" + nbBit + " 0, %" + id);
 		}
-		
+
 		return this.counter;
 	}
 

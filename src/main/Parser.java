@@ -594,7 +594,9 @@ public class Parser {
 		case SLASH:
 			Operator o = MUL_DIV();
 			Type t1 = FACTOR();
-			t = TERM_REC(resultType(t, o, t1));
+			Type rT = resultType(t, o, t1);
+			rT.LLVMTempId = llvm.w48(t, t1, rT);
+			t = TERM_REC(rT);
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
