@@ -87,10 +87,104 @@ public class LLVM {
 				"ret i32 %7\n" +
 				"}");
 	}
-	
+
+	long w45Plus(Type t1, Type t2, Type rT){
+
+		int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit2 = (int) Math.ceil(t2.image.digitBefore/Math.log10(2)) + 1;
+
+		if (t1.image.digitAfter > 0 && t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fadd float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId + "\n");
+		}
+		else if (t1.image.digitAfter > 0 && t2.image.digitAfter == 0){
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fadd float %" + t1.LLVMTempId + ", %" + (this.counter-1) + "\n");
+		}
+		else if (t1.image.digitAfter == 0 && t2.image.digitAfter > 0){
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fadd float %" + (this.counter-1) + ", %" + t2.LLVMTempId + "\n");
+		}
+		else{
+			int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + nbBit);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + nbBit);
+
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + nbBit);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + nbBit);
+
+			this.writeToLLFile("%" + ++this.counter + " = add i" + nbBit + " %" + (this.counter-2) + ", %" + (this.counter-1) + "\n");
+		}
+
+		return this.counter;
+
+	}
+
+	long w45Minus(Type t1, Type t2, Type rT){
+
+		int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit2 = (int) Math.ceil(t2.image.digitBefore/Math.log10(2)) + 1;
+
+		if (t1.image.digitAfter > 0 && t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fsub float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId + "\n");
+		}
+		else if (t1.image.digitAfter > 0 && t2.image.digitAfter == 0){
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fsub float %" + t1.LLVMTempId + ", %" + (this.counter-1) + "\n");
+		}
+		else if (t1.image.digitAfter == 0 && t2.image.digitAfter > 0){
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fsub float %" + (this.counter-1) + ", %" + t2.LLVMTempId + "\n");
+		}
+		else{
+			int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+
+			if (nbBit > nbBit1){
+				if (t1.image.signed)
+					this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + nbBit);
+				else
+					this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + nbBit);
+				t1.LLVMTempId = this.counter;
+			}
+
+			if (nbBit > nbBit2){
+				if (t2.image.signed)
+					this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + nbBit);
+				else
+					this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + nbBit);
+				t2.LLVMTempId = this.counter;
+			}
+			
+			this.writeToLLFile("%" + ++this.counter + " = sub i" + nbBit + " %" + t1.LLVMTempId + ", %" + t2.LLVMTempId + "\n");
+		}
+
+		return this.counter;
+
+	}
+
 	long w48(Type t1, Operator o, Type t2, Type rT){
 		long c = 0;
-		
+
 		switch(o){
 		case MULTIPLY:
 			c = w48Mult(t1, t2, rT);
@@ -176,14 +270,14 @@ public class LLVM {
 				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
 			else
 				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
-			
+
 			if (t2.image.signed)
 				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
 			else
 				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
-			
+
 			this.writeToLLFile("%" + ++this.counter + " = fdiv float %" + (this.counter-2) + ", %" + (this.counter-1));
-			
+
 			if (t1.image.signed || t2.image.signed){
 				this.writeToLLFile("%" + ++this.counter + " = fptosi float " + (this.counter-1) + " to i" + nbBit + "\n");
 			}
