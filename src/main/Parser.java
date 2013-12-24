@@ -531,7 +531,11 @@ public class Parser {
 		case EQUALS_SIGN:
 			Operator o = COMP_OP();
 			Type t1 = VALUE();
-			t = resultType(t, o, t1);
+			Type rT = resultType(t, o, t1);
+			// LLVM ---
+			rT.LLVMTempId = llvm.w42(t, o, t1, rT);
+			// ---
+			t = rT;
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:
@@ -595,7 +599,9 @@ public class Parser {
 			Operator o = MUL_DIV();
 			Type t1 = FACTOR();
 			Type rT = resultType(t, o, t1);
+			// LLVM ---
 			rT.LLVMTempId = llvm.w48(t, o, t1, rT);
+			// ---
 			t = TERM_REC(rT);
 			break;
 		case END_OF_INSTRUCTION:
@@ -740,7 +746,11 @@ public class Parser {
 		case MINUS_SIGN:
 			Operator o = PLUS_MINUS();
 			Type t1 = TERM();
-			t = VALUE_REC(resultType(t, o, t1));
+			Type rT = resultType(t, o, t1);
+			// LLVM ---
+			rT.LLVMTempId = llvm.w45(t, o, t1, rT);
+			// ---
+			t = VALUE_REC(rT);
 			break;
 		case END_OF_INSTRUCTION:
 		case TO:

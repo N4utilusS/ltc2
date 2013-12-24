@@ -1,5 +1,11 @@
 package main;
 
+import static main.LexicalUnit.EQUALS_SIGN;
+import static main.LexicalUnit.GREATER_OR_EQUALS;
+import static main.LexicalUnit.GREATER_THAN;
+import static main.LexicalUnit.LOWER_OR_EQUALS;
+import static main.LexicalUnit.LOWER_THAN;
+
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -88,6 +94,279 @@ public class LLVM {
 				"}");
 	}
 
+	long w42(Type t1, Operator o, Type t2, Type rT){
+		long c = 0;
+
+		switch(o){
+		case GREATER_THAN :
+			c = w42GT(t1, t2, rT);
+			break;
+		case LOWER_THAN : 
+			c = w42LT(t1, t2, rT);
+			break;
+		case LOWER_OR_EQUALS:
+			c = w42LE(t1, t2, rT);
+			break;
+		case GREATER_OR_EQUALS:
+			c = w42GE(t1, t2, rT);
+			break;
+		case EQUALS:
+			c = w42E(t1, t2, rT);
+			break;
+		}
+
+		return c;
+	}
+	
+	long w42E(Type t1, Type t2, Type rT) {
+
+		int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit2 = (int) Math.ceil(t2.image.digitBefore/Math.log10(2)) + 1;
+
+		if (t1.image.digitAfter > 0 && t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp oeq float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId);
+		}
+		else if (t1.image.digitAfter > 0 && t2.image.digitAfter == 0){
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp oeq float %" + t1.LLVMTempId + ", %" + (this.counter-1) + "\n");
+		}
+		else if (t1.image.digitAfter == 0 && t2.image.digitAfter > 0){
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp oeq float %" + (this.counter-1) + ", %" + t2.LLVMTempId + "\n");
+		}
+		else{
+
+			int max = Math.max(nbBit1, nbBit2) + 1;	// Add a supp. bit to allow differentiation between u/s.
+
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+
+			this.writeToLLFile("%" + ++this.counter + " = icmp eq i" + max + " %" + (this.counter-2) + ", %" + (this.counter-1) + "\n");
+		}
+
+		this.writeToLLFile("%" + ++this.counter + " = zext i1 %" + (this.counter-1) + " to i" + nbBit);
+
+		return this.counter;
+	}
+	
+	long w42GE(Type t1, Type t2, Type rT) {
+
+		int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit2 = (int) Math.ceil(t2.image.digitBefore/Math.log10(2)) + 1;
+
+		if (t1.image.digitAfter > 0 && t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp oge float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId);
+		}
+		else if (t1.image.digitAfter > 0 && t2.image.digitAfter == 0){
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp oge float %" + t1.LLVMTempId + ", %" + (this.counter-1) + "\n");
+		}
+		else if (t1.image.digitAfter == 0 && t2.image.digitAfter > 0){
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp oge float %" + (this.counter-1) + ", %" + t2.LLVMTempId + "\n");
+		}
+		else{
+
+			int max = Math.max(nbBit1, nbBit2) + 1;	// Add a supp. bit to allow differentiation between u/s.
+
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+
+			this.writeToLLFile("%" + ++this.counter + " = icmp sge i" + max + " %" + (this.counter-2) + ", %" + (this.counter-1) + "\n");
+		}
+
+		this.writeToLLFile("%" + ++this.counter + " = zext i1 %" + (this.counter-1) + " to i" + nbBit);
+
+		return this.counter;
+	}
+
+	long w42LE(Type t1, Type t2, Type rT) {
+
+		int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit2 = (int) Math.ceil(t2.image.digitBefore/Math.log10(2)) + 1;
+
+		if (t1.image.digitAfter > 0 && t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp ole float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId);
+		}
+		else if (t1.image.digitAfter > 0 && t2.image.digitAfter == 0){
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp ole float %" + t1.LLVMTempId + ", %" + (this.counter-1) + "\n");
+		}
+		else if (t1.image.digitAfter == 0 && t2.image.digitAfter > 0){
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp ole float %" + (this.counter-1) + ", %" + t2.LLVMTempId + "\n");
+		}
+		else{
+
+			int max = Math.max(nbBit1, nbBit2) + 1;	// Add a supp. bit to allow differentiation between u/s.
+
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+
+			this.writeToLLFile("%" + ++this.counter + " = icmp sle i" + max + " %" + (this.counter-2) + ", %" + (this.counter-1) + "\n");
+		}
+
+		this.writeToLLFile("%" + ++this.counter + " = zext i1 %" + (this.counter-1) + " to i" + nbBit);
+
+		return this.counter;
+	}
+
+	long w42LT(Type t1, Type t2, Type rT) {
+
+		int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit2 = (int) Math.ceil(t2.image.digitBefore/Math.log10(2)) + 1;
+
+		if (t1.image.digitAfter > 0 && t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp olt float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId);
+		}
+		else if (t1.image.digitAfter > 0 && t2.image.digitAfter == 0){
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp olt float %" + t1.LLVMTempId + ", %" + (this.counter-1) + "\n");
+		}
+		else if (t1.image.digitAfter == 0 && t2.image.digitAfter > 0){
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp olt float %" + (this.counter-1) + ", %" + t2.LLVMTempId + "\n");
+		}
+		else{
+
+			int max = Math.max(nbBit1, nbBit2) + 1;	// Add a supp. bit to allow differentiation between u/s.
+
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+
+			this.writeToLLFile("%" + ++this.counter + " = icmp slt i" + max + " %" + (this.counter-2) + ", %" + (this.counter-1) + "\n");
+		}
+
+		this.writeToLLFile("%" + ++this.counter + " = zext i1 %" + (this.counter-1) + " to i" + nbBit);
+
+		return this.counter;
+	}
+
+	long w42GT(Type t1, Type t2, Type rT) {
+
+		int nbBit = (int) Math.ceil(rT.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
+		int nbBit2 = (int) Math.ceil(t2.image.digitBefore/Math.log10(2)) + 1;
+
+		if (t1.image.digitAfter > 0 && t2.image.digitAfter > 0){
+			this.writeToLLFile("%" + ++this.counter + " = fcmp ogt float %" + t1.LLVMTempId + ", %" + t2.LLVMTempId);
+		}
+		else if (t1.image.digitAfter > 0 && t2.image.digitAfter == 0){
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp ogt float %" + t1.LLVMTempId + ", %" + (this.counter-1) + "\n");
+		}
+		else if (t1.image.digitAfter == 0 && t2.image.digitAfter > 0){
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+			else
+				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit1 + " %" + t1.LLVMTempId + " to float");
+
+			this.writeToLLFile("%" + ++this.counter + " = fcmp ogt float %" + (this.counter-1) + ", %" + t2.LLVMTempId + "\n");
+		}
+		else{
+
+			int max = Math.max(nbBit1, nbBit2) + 1;	// Add a supp. bit to allow differentiation between u/s.
+
+			if (t1.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit1 + " %" + t1.LLVMTempId + " to i" + max);
+
+			if (t2.image.signed)
+				this.writeToLLFile("%" + ++this.counter + " = sext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+			else
+				this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + max);
+
+			this.writeToLLFile("%" + ++this.counter + " = icmp sgt i" + max + " %" + (this.counter-2) + ", %" + (this.counter-1) + "\n");
+		}
+
+		this.writeToLLFile("%" + ++this.counter + " = zext i1 %" + (this.counter-1) + " to i" + nbBit);
+
+		return this.counter;
+	}
+
+	long w45(Type t1, Operator o, Type t2, Type rT){
+		long c = 0;
+
+		switch(o){
+		case PLUS:
+			c = w45Plus(t1, t2, rT);
+			break;
+		case MINUS:
+			c = w45Minus(t1, t2, rT);
+			break;
+		}
+		return c;
+	}
+
 	long w45Plus(Type t1, Type t2, Type rT){
 
 		int nbBit1 = (int) Math.ceil(t1.image.digitBefore/Math.log10(2)) + 1;
@@ -174,7 +453,7 @@ public class LLVM {
 					this.writeToLLFile("%" + ++this.counter + " = zext i" + nbBit2 + " %" + t2.LLVMTempId + " to i" + nbBit);
 				t2.LLVMTempId = this.counter;
 			}
-			
+
 			this.writeToLLFile("%" + ++this.counter + " = sub i" + nbBit + " %" + t1.LLVMTempId + ", %" + t2.LLVMTempId + "\n");
 		}
 
