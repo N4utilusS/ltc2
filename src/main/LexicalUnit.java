@@ -115,6 +115,13 @@ public enum LexicalUnit{
 		return null;
 	}
 
+	/**
+	 * 
+	 * @param lu1
+	 * @param op
+	 * @param lu2
+	 * @param res
+	 */
 	private static void setResultingType(LexicalUnit lu1, Operator op, LexicalUnit lu2, LexicalUnit res){
 		if (lu1.SYMBOL_ID > lu2.SYMBOL_ID)
 			types[lu2.SYMBOL_ID-1][lu1.SYMBOL_ID-1][op.ordinal()] = res;	// So we only need to fill the tab for lu1-lu2 and not also for lu2-lu1 (same thing).
