@@ -480,7 +480,7 @@ public class Parser {
 			checkAssignationCompatibility(s, rT);
 			// LLVM ---
 			vT = (Type) s.get(Symbol.TYPE);
-			vT.LLVMTempId = llvm.w54((String) s.getValue(), (Image) s.get(Symbol.IMAGE));
+			vT.LLVMTempId = llvm.w54((String) s.getValue(), vT.image);
 			rT.LLVMTempId = llvm.w45Minus(vT, t, rT);
 			llvm.w28(s, rT);
 			// ---
