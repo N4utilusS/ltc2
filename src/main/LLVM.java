@@ -46,6 +46,10 @@ public class LLVM {
 	void writeMainHeader(){
 		this.writeToLLFile("define i32 @main () nounwind ssp uwtable {\nentry:");
 	}
+	
+	void wMainFooter(){
+		this.writeToLLFile("ret i32 0");
+	}
 
 	void close() {
 		try {
@@ -94,6 +98,14 @@ public class LLVM {
 	void wPerfUntilHeader(){
 		this.writeToLLFile("br label %L" + this.labelCounter + "\n" +
 				"L" + this.labelCounter + ":");
+	}
+	
+	void wPerfUntilFooter(long id, String labelName){
+		this.writeToLLFile("br i1 %" + id + ", label %L" + (this.labelCounter+2) + ", label %L" + (this.labelCounter+1) + "\n" +
+				"L" + (this.labelCounter+1) + ":" +
+						"call void @" + labelName + "()" +
+								"br label %L" + this.labelCounter + "\n" +
+										"L" + (this.labelCounter+2) + ":");
 	}
 	
 	void wPerf(String name){

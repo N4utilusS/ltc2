@@ -68,9 +68,6 @@ public class Parser {
 		match(SECTION);
 		END_INST();
 		VAR_LIST();
-		// LLVM ----------
-		llvm.writeMainHeader();
-		// ---------
 	}
 
 	private void VAR_LIST() throws Exception {
@@ -218,9 +215,15 @@ public class Parser {
 	}
 
 	private void LABELS() throws Exception {
+		// LLVM ---
+		llvm.writeMainHeader();
+		// ---
 		LABEL();
 		END_INST();
 		INSTRUCTION_LIST();
+		// LLVM ---
+		llvm.wMainFooter();
+		// ---
 		LABELS_REC();
 	}
 
@@ -232,6 +235,9 @@ public class Parser {
 		switch(currentToken.unit){
 		case IDENTIFIER : 
 			LABEL();
+			// LLVM ---
+			llvm.wLabelHeader(this.previousToken.getValue());
+			// ---
 			END_INST();
 			INSTRUCTION_LIST();
 			LABELS_REC();
@@ -240,6 +246,10 @@ public class Parser {
 			break;
 		default: syntax_error("Missing: IDENTIFIER or END"); break;
 		}
+	}
+
+	private void LABEL() throws Exception {
+		match(IDENTIFIER);
 	}
 
 	private void INSTRUCTION_LIST() throws Exception {
@@ -345,14 +355,14 @@ public class Parser {
 
 	private void CALL_FACT() throws Exception {
 		String labelName = this.previousToken.getValue();
-		
+
 		switch(currentToken.unit){
 		case UNTIL :
 			match(UNTIL);
 			llvm.wPerfUntilHeader();
 			Type t = EXPRESSION(); checkLogicalExpression(t);
 			long id = llvm.wLogicalExpRes(t);
-			llvm.wPerfUntilFooter(name);
+			llvm.wPerfUntilFooter(id, labelName);
 			END_INST();
 			break;
 		case END_OF_INSTRUCTION:
@@ -840,11 +850,6 @@ public class Parser {
 		default: syntax_error("Missing: MINUS_SIGN or PLUS_SIGN"); break;
 		}
 		return o;
-	}
-
-	private void LABEL() throws Exception {
-		match(IDENTIFIER);
-		llvm.wLabelHeader(this.previousToken.getValue());
 	}
 
 	private void WORD() throws Exception {
