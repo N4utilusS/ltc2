@@ -1,5 +1,9 @@
 package main;
-
+/**
+ * Data structure representing the type of a variable.
+ * It contains a lexical unit, an image and the corresponding temporary ID in the LLVM code.
+ *
+ */
 public class Type {
 	LexicalUnit l;
 	Image image = new Image();
@@ -7,6 +11,7 @@ public class Type {
 
 	/**
 	 * We update the image to know whether it will be truncated.
+	 * Receiving a numerical value.
 	 * @param str The number encountered.
 	 */
 	public void updateImage(String str) {
@@ -29,7 +34,9 @@ public class Type {
 	}
 
 	/**
-	 * For the identifiers.
+	 * We update the image to know whether it will be truncated.
+	 * Receiving an identifier.
+	 * @param image
 	 */
 	public void updateImageWithImage(String image){
 		if (image.charAt(0) == 's')
