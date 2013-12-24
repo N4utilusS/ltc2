@@ -87,6 +87,20 @@ public class LLVM {
 				"ret i32 %7\n" +
 				"}");
 	}
+	
+	long w48(Type t1, Operator o, Type t2, Type rT){
+		long c = 0;
+		
+		switch(o){
+		case MULTIPLY:
+			c = w48Mult(t1, t2, rT);
+			break;
+		case DIVIDE:
+			c = w48Div(t1, t2, rT);
+			break;
+		}
+		return c;
+	}
 
 	long w48Mult(Type t1, Type t2, Type rT){	// Multiply
 
@@ -167,6 +181,15 @@ public class LLVM {
 				this.writeToLLFile("%" + ++this.counter + " = sitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
 			else
 				this.writeToLLFile("%" + ++this.counter + " = uitofp i" + nbBit2 + " %" + t2.LLVMTempId + " to float");
+			
+			this.writeToLLFile("%" + ++this.counter + " = fdiv float %" + (this.counter-2) + ", %" + (this.counter-1));
+			
+			if (t1.image.signed || t2.image.signed){
+				this.writeToLLFile("%" + ++this.counter + " = fptosi float " + (this.counter-1) + " to i" + nbBit + "\n");
+			}
+			else{
+				this.writeToLLFile("%" + ++this.counter + " = fptoui float " + (this.counter-1) + " to i" + nbBit + "\n");
+			}
 		}
 
 		return this.counter;

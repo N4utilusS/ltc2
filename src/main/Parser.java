@@ -595,7 +595,7 @@ public class Parser {
 			Operator o = MUL_DIV();
 			Type t1 = FACTOR();
 			Type rT = resultType(t, o, t1);
-			rT.LLVMTempId = llvm.w48Mult(t, t1, rT);
+			rT.LLVMTempId = llvm.w48(t, o, t1, rT);
 			t = TERM_REC(rT);
 			break;
 		case END_OF_INSTRUCTION:
