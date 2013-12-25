@@ -17,7 +17,7 @@ public class Main{
 		// Apply the lexical analyzer
 //		Scanner cobolScanner = new Scanner(System.in);
 		
-		Parser parsSemanticAnal = new Parser();
+		new Parser(args[0]);
 		
 //		Symbol lexicalUnit;
 //		do{
@@ -27,7 +27,7 @@ public class Main{
 //			}
 //		}while(lexicalUnit == null || !lexicalUnit.unit.equals(LexicalUnit.EOF));
 //		
-		// Printing the table
+		/*// Printing the table
 		final Map<String,Symbol<?>> tableOfSymbols = parsSemanticAnal.getScanner().getTableOfSymbols();
 		List<Symbol<String>> variables = new ArrayList<Symbol<String>>();
 		List<Symbol<String>> labels	 = new ArrayList<Symbol<String>>();
@@ -39,7 +39,7 @@ public class Main{
 					if(symbol.containsKey(Symbol.IMAGE)) variables.add(symbol);
 					else labels.add(symbol);
 				}
-			}catch(ClassCastException cce){ cce.printStackTrace(); /* we just ignore remaining information from the table*/}
+			}catch(ClassCastException cce){ cce.printStackTrace();  we just ignore remaining information from the table}
 		}
 		// we sort vars/labels
 		final Comparator<Symbol<String>> sorter = new Comparator<Symbol<String>>(){
@@ -55,9 +55,7 @@ public class Main{
 			System.out.println(identifier.getValue()+"\t"+identifier.get(Symbol.IMAGE)+"\t"+((Type) identifier.get(Symbol.TYPE)).l+"\t"+(String) identifier.get(Symbol.CONTENT));
 		System.out.println("labels");
 		for(Symbol<String> identifier:labels)
-			System.out.println(identifier.getValue()+"\t"+identifier.get(Symbol.LINE));
+			System.out.println(identifier.getValue()+"\t"+identifier.get(Symbol.LINE));*/
 	
-		long temp = 34 + 1;
-		System.out.println(temp);
 	}
 }

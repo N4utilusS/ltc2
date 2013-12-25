@@ -67,8 +67,7 @@ public class Type {
 				this.image.digitBefore = digitBefore;
 		}
 		
-		if (this.image.digitBefore > this.image.maxDigitBefore)
-			this.image.maxDigitBefore = this.image.digitBefore;
+	
 	}
 
 }

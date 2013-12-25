@@ -34,6 +34,7 @@ display a.
 /write the content of a on stdout.
 stop run.
 /stop the program.
+
 find.
 move c to b.
 perform diff until a < b.
@@ -42,6 +43,7 @@ move a to b.
 /put the value of a into b.
 move c to a.
 /put the value of c into a.
+
 diff.
 * Compute a modulo b.
 subtract b from a.

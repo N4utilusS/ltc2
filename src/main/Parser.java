@@ -17,16 +17,18 @@ public class Parser {
 	private List<Symbol<String>> usedLabels;
 	private Map<String,Symbol<?>> tableOfSymbols;
 	private LLVM llvm;
-	private boolean acceptEncountered = false;
 
-	public Parser(){
+	public Parser(String path){
 		this.llvm = new LLVM("result.ll");
 		this.usedLabels = new ArrayList<Symbol<String>>();
 		//this.cobolScanner = new Scanner(System.in);
 		try {
-			this.cobolScanner = new Scanner(new FileInputStream(new File("entree.txt")));
+			this.cobolScanner = new Scanner(new FileInputStream(new File(path)));
 			this.tableOfSymbols = cobolScanner.getTableOfSymbols();
 			currentToken = this.cobolScanner.next_token();
+			// LLVM ---
+			llvm.writeHeader();
+			// ---
 			PROGRAM();
 
 			// Check if the labels used are defined.
@@ -36,9 +38,9 @@ public class Parser {
 					throw new Exception("LINE: " + s.get(Symbol.LINE) + "\nUse of undefined label: " + s.getValue() + "\n");
 			}
 
-			// Write the read function for int if the accept is encountered.
+			/*// Write the read function for int if the accept is encountered.
 			if (this.acceptEncountered)
-				this.llvm.writeReadInt();
+				this.llvm.writeReadInt();*/
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -91,23 +93,23 @@ public class Parser {
 		match(IMAGE);
 		// Use the image to give a type to the symbol:
 		s.setTypeWithImage();
-		// LLVM -------
 		Type varT = (Type) s.get(Symbol.TYPE);
-		llvm.varDecl(s.getValue(), varT.image);
-		// --------
-		t = VD_FACT();
+		t = VD_FACT(s.getValue(), varT);
 		checkAssignationCompatibility(s, t);
 	}
 
-	private Type VD_FACT() throws Exception {
+	private Type VD_FACT(String name, Type varT) throws Exception {
 		Type t = null;
 		switch(currentToken.unit){
-		case END_OF_INSTRUCTION : 
+		case END_OF_INSTRUCTION :
 			END_INST();
+			// LLVM -------
+			llvm.varDecl(name, varT.image, null);
+			// --------
 			break;
 		case VALUE :
 			match(VALUE);
-			t = VD_VALUE();
+			t = VD_VALUE(name, varT);
 			END_INST();
 			break;
 		default: syntax_error("Missing: END_OF_INSTRUCTION or VALUE"); break;
@@ -115,18 +117,24 @@ public class Parser {
 		return t;
 	}
 
-	private Type VD_VALUE() throws Exception {
+	private Type VD_VALUE(String name, Type varT) throws Exception {
 		Type t = new Type();
 		switch(currentToken.unit){
 		case INTEGER:
 			match(INTEGER);
 			t.l = INTEGER;
 			t.updateImage(this.previousToken.getValue());
+			// LLVM ---
+			llvm.varDecl(name, varT.image, this.previousToken.getValue());
+			// ---
 			break;
 		case REAL:
 			match(REAL);
 			t.l = REAL;
 			t.updateImage(this.previousToken.getValue());
+			// LLVM ---
+			llvm.varDecl(name, varT.image, this.previousToken.getValue());
+			// ---
 			break;
 		default: syntax_error("Missing: INTEGER or REAL"); break;
 		}
@@ -221,9 +229,6 @@ public class Parser {
 		LABEL();
 		END_INST();
 		INSTRUCTION_LIST();
-		// LLVM ---
-		llvm.wMainFooter();
-		// ---
 		LABELS_REC();
 	}
 
@@ -322,11 +327,15 @@ public class Parser {
 		case LEFT_PARENTHESIS:
 		case TRUE:
 		case FALSE:
-			EXPRESSION();
+			Type t = EXPRESSION();
+			// LLVM ---
+			llvm.wDisplay(t);
+			// ---
 			END_INST();
 			break;
 		case STRING:
 			match(STRING);
+			llvm.wDisplayString(this.previousToken.getValue());
 			END_INST();
 			break;
 		default: syntax_error("Missing: IDENTIFIER or INTEGER or NOT or MINUS_SIGN or LEFT_PARENTHESIS or STRING or TRUE or FALSE"); break;
@@ -334,16 +343,16 @@ public class Parser {
 	}
 
 	private void READ() throws Exception {
+		Symbol<?> s;
 		match(ACCEPT);
 		match(IDENTIFIER);
 		// Check if declared variable. TODO Check for the type of the id in code gen ?
-		if (!this.tableOfSymbols.containsKey(previousToken.getValue()))
+		if ((s = this.tableOfSymbols.get(previousToken.getValue())) == null)
 			this.semantic_error("Use of undefined variable: " + previousToken.getValue());
 		END_INST();
-		// Set the acceptEncountered to true, so the read llvm function is written in the file.
-		this.acceptEncountered = true;
-		long id = llvm.wAccept();
-		
+		Type vT = (Type) s.get(Symbol.TYPE);
+		vT.LLVMTempId = llvm.wAccept(vT);
+		llvm.w28(s, vT);
 	}
 
 	private void CALL() throws Exception {
@@ -872,7 +881,7 @@ public class Parser {
 		}
 		else{
 
-			System.out.println(lexicalUnit + ": " + currentToken.getValue());
+			//System.out.println(lexicalUnit + ": " + currentToken.getValue());
 			previousToken = currentToken;
 			currentToken = cobolScanner.next_token();
 		}
